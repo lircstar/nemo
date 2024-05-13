@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 type WSClient struct {

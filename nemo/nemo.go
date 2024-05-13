@@ -1,14 +1,14 @@
 package nemo
 
 import (
+	"github.com/lircstar/nemo/sys/pool"
 	"math"
-	"nemo/sys/pool"
 	"time"
 
-	"nemo/nemo/conf"
-	"nemo/nemo/network"
-	"nemo/nemo/network/proto"
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/nemo/network/proto"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 //-------------------------------------------------------------------------------------

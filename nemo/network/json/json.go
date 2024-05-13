@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/util"
 	"math"
-	"nemo/nemo/conf"
-	"nemo/nemo/network"
-	"nemo/sys/log"
-	"nemo/sys/util"
 	"reflect"
 )
 

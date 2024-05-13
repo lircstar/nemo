@@ -3,7 +3,7 @@ package pool
 import (
 	"testing"
 
-	"nemo/sys/utest"
+	"github.com/lircstar/nemo/sys/utest"
 )
 
 func Test_AtomPool_AllocAndFree(t *testing.T) {

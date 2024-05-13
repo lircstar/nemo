@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"sync"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 // one Go per goroutine (goroutine not safe)

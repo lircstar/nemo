@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/lircstar/nemo/nemo/conf"
 	"math"
-	"nemo/nemo/conf"
 	"reflect"
 
-	"nemo/nemo/network"
-	"nemo/sys/log"
-	"nemo/sys/util"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/util"
 )
 
 // -------------------------

@@ -1,14 +1,14 @@
 package nemo
 
 import (
-	"nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/conf"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"strconv"
 	"time"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 var eventChan = make(chan *Event, 1024)

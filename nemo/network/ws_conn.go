@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 type WebsocketConnSet map[*websocket.Conn]struct{}

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"nemo/nemo/conf"
-	"nemo/sys/log"
-	"nemo/sys/pool"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/pool"
 )
 
 type WSServer struct {
