@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"nemo/sys/log"
-	"nemo/sys/util"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/util"
 )
 
 var (
