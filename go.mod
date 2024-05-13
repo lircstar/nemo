@@ -1,4 +1,4 @@
-module nemo
+module github.com/lircstar/nemo
 
 go 1.20
 
