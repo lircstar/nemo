@@ -22,7 +22,7 @@ type WSServer struct {
 	CertFile        string
 	KeyFile         string
 	LittleEndian    bool
-	NewAgent        func(*WSConn) Agent
+	NewAgent        func(Conn) Agent
 	ln              net.Listener
 	handler         *WSHandler
 }
@@ -31,7 +31,7 @@ type WSHandler struct {
 	maxConnNum      int
 	pendingWriteNum int
 	maxMsgLen       int
-	newAgent        func(*WSConn) Agent
+	newAgent        func(Conn) Agent
 	upgrader        websocket.Upgrader
 	connPool        *pool.ObjectPool
 	//conns           WebsocketConnSet
@@ -48,7 +48,7 @@ func (handler *WSHandler) newWSConn(conn *websocket.Conn, pendingWriteNum int, m
 	}
 
 	wsConn := handler.connPool.Get().(*WSConn)
-	wsConn.closeFlag = false
+	wsConn.closeFlag.Store(false)
 	wsConn.conn = conn
 	return wsConn
 }
@@ -85,9 +85,10 @@ func (handler *WSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wsConn := newWSConn(conn, handler.pendingWriteNum, handler.maxMsgLen)
+	wsConn := handler.newWSConn(conn, handler.pendingWriteNum, handler.maxMsgLen)
 	wsConn.start()
 	agent := handler.newAgent(wsConn)
+	agent.SetType(TYPE_AGENT_WEBSOCKET)
 	agent.Run(nil)
 
 	handler.delWSConn(wsConn)
@@ -171,7 +172,7 @@ func (server *WSServer) Close() {
 
 	server.handler.connPool.Range(func(i interface{}) {
 		if i != nil {
-			conn := i.(*TCPConn).conn
+			conn := i.(*WSConn).conn
 			if conn != nil {
 				conn.Close()
 			}

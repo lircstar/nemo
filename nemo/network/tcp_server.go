@@ -14,7 +14,7 @@ type TCPServer struct {
 	Addr            string
 	MaxConnNum      int
 	PendingWriteNum int
-	NewAgent        func(*TCPConn) Agent
+	NewAgent        func(Conn) Agent
 	ln              net.Listener
 	connPool        *pool.ObjectPool
 
@@ -122,6 +122,7 @@ func (server *TCPServer) run() {
 		tcpConn := server.newTCPConn(conn)
 		tcpConn.start()
 		agent := server.NewAgent(tcpConn)
+		agent.SetType(TYPE_AGENT_TCP)
 		go func() {
 			// routine
 			agent.OnConnect()

@@ -1,46 +1,36 @@
 package network
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
-	"sync"
 	"time"
 
 	"github.com/lircstar/nemo/sys/log"
 )
 
 type WSClient struct {
-	sync.Mutex
 	Addr             string
-	ConnNum          int
 	ConnectInterval  time.Duration
 	PendingWriteNum  int
 	MaxMsgLen        int
+	LittleEndian     bool
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
-	NewAgent         func(*WSConn) Agent
+	agent            Agent
+	NewAgent         func(Conn) Agent
 	dialer           websocket.Dialer
-	conns            WebsocketConnSet
-	wg               sync.WaitGroup
+	conn             *websocket.Conn
 	closeFlag        bool
+	connected        bool
 }
 
 func (client *WSClient) Start() {
 	client.init()
-
-	for i := 0; i < client.ConnNum; i++ {
-		client.wg.Add(1)
-		go client.connect()
-	}
+	go client.connect()
 }
 
 func (client *WSClient) init() {
-	client.Lock()
-	defer client.Unlock()
 
-	if client.ConnNum <= 0 {
-		client.ConnNum = 1
-		log.Infof("invalid ConnNum, reset to %v", client.ConnNum)
-	}
 	if client.ConnectInterval <= 0 {
 		client.ConnectInterval = 3 * time.Second
 		log.Infof("invalid ConnectInterval, reset to %v", client.ConnectInterval)
@@ -60,12 +50,12 @@ func (client *WSClient) init() {
 	if client.NewAgent == nil {
 		log.Fatal("NewAgent must not be nil")
 	}
-	if client.conns != nil {
+	if client.conn != nil {
 		log.Fatal("client is running")
 	}
 
-	client.conns = make(WebsocketConnSet)
 	client.closeFlag = false
+
 	client.dialer = websocket.Dialer{
 		HandshakeTimeout: client.HandshakeTimeout,
 	}
@@ -75,6 +65,7 @@ func (client *WSClient) dial() *websocket.Conn {
 	for {
 		conn, _, err := client.dialer.Dial(client.Addr, nil)
 		if err == nil || client.closeFlag {
+			fmt.Printf("connect to %v success\n", client.Addr)
 			return conn
 		}
 
@@ -85,7 +76,6 @@ func (client *WSClient) dial() *websocket.Conn {
 }
 
 func (client *WSClient) connect() {
-	defer client.wg.Done()
 
 reconnect:
 	conn := client.dial()
@@ -94,25 +84,29 @@ reconnect:
 	}
 	conn.SetReadLimit(int64(client.MaxMsgLen))
 
-	client.Lock()
 	if client.closeFlag {
-		client.Unlock()
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			return
+		}
 		return
 	}
-	client.conns[conn] = struct{}{}
-	client.Unlock()
 
 	wsConn := newWSConn(conn, client.PendingWriteNum, client.MaxMsgLen)
-	agent := client.NewAgent(wsConn)
-	agent.Run(nil)
+	wsConn.conn = conn
+	wsConn.start()
+	client.agent = client.NewAgent(wsConn)
+	client.agent.SetType(TYPE_CLIENT_WEBSOCKET)
+	client.agent.OnConnect()
+	client.agent.Run(nil)
+	client.connected = false
 
 	// cleanup
 	wsConn.Close()
-	client.Lock()
-	delete(client.conns, conn)
-	client.Unlock()
-	agent.OnClose()
+	conn = nil
+	wsConn = nil
+	client.agent.OnClose()
+	client.agent = nil
 
 	if client.AutoReconnect {
 		time.Sleep(client.ConnectInterval)
@@ -120,14 +114,28 @@ reconnect:
 	}
 }
 
-func (client *WSClient) Close() {
-	client.Lock()
-	client.closeFlag = true
-	for conn := range client.conns {
-		conn.Close()
-	}
-	client.conns = nil
-	client.Unlock()
+func (client *WSClient) Send(msg interface{}) bool {
+	return client.agent.SendMessage(msg)
+}
 
-	client.wg.Wait()
+func (client *WSClient) Close() {
+	client.closeFlag = true
+	_ = client.conn.Close()
+	client.conn = nil
+}
+
+func (client *WSClient) GetType() uint {
+	return TYPE_CLIENT_WEBSOCKET
+}
+
+func (client *WSClient) GetAddress() string {
+	return client.Addr
+}
+
+func (client *WSClient) GetConnected() bool {
+	return client.connected
+}
+
+func (client *WSClient) GetAgent() Agent {
+	return client.agent
 }

@@ -11,7 +11,7 @@ import (
 type UDPServer struct {
 	Addr       string
 	MaxConnNum int
-	NewAgent   func(conn Conn) Agent
+	NewAgent   func(Conn) Agent
 	ln         *net.UDPConn
 	agents     AgentSet
 	connPool   *pool.ObjectPool
@@ -132,6 +132,7 @@ func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 		conn.remote = addr
 		conn.key = key
 		agent = server.NewAgent(conn)
+		agent.SetType(TYPE_AGENT_UDP)
 		conn.agent = agent
 		server.lkAgent.Lock()
 		server.agents[*key] = agent

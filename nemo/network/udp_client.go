@@ -27,9 +27,9 @@ type UDPClient struct {
 	msgParser    *UdpMsgParser
 }
 
-func (client *UDPClient) Connect(remoteAddr string) {
+func (client *UDPClient) Start() {
 	client.init()
-	go client.doConnect(remoteAddr)
+	go client.doConnect(client.Addr)
 }
 
 func (client *UDPClient) init() {
@@ -66,6 +66,7 @@ reconnect:
 	udpConn.conn = conn
 	client.conn = conn
 	client.agent = client.NewAgent(udpConn)
+	client.agent.SetType(TYPE_CLIENT_UDP)
 	client.running = true
 	client.agent.OnConnect()
 	client.idleTime = time.Now().Unix()
@@ -91,12 +92,12 @@ reconnect:
 
 func (client *UDPClient) Close() {
 	if client.agent != nil {
-		client.agent.Close()
 		client.conn.Close()
+		client.agent.Close()
 	}
 }
 
-func (client *UDPClient) SendMessage(msg interface{}) bool {
+func (client *UDPClient) Send(msg interface{}) bool {
 	if client.agent != nil {
 		return client.agent.SendMessage(msg)
 	}
@@ -128,4 +129,20 @@ func (client *UDPClient) goRun() {
 			}
 		}
 	}
+}
+
+func (client *UDPClient) GetType() uint {
+	return TYPE_CLIENT_UDP
+}
+
+func (client *UDPClient) GetAddress() string {
+	return client.Addr
+}
+
+func (client *UDPClient) GetConnected() bool {
+	return true
+}
+
+func (client *UDPClient) GetAgent() Agent {
+	return client.agent
 }

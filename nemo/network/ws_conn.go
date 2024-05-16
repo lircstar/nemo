@@ -3,22 +3,20 @@ package network
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"net"
-	"sync"
-
 	"github.com/lircstar/nemo/sys/log"
+	"net"
+	"sync/atomic"
 )
 
 type WebsocketConnSet map[*websocket.Conn]struct{}
 
 type WSConn struct {
-	sync.Mutex
 	//ConnOption
 
 	conn      *websocket.Conn
 	writeChan chan []byte
 	maxMsgLen int
-	closeFlag bool
+	closeFlag atomic.Bool
 }
 
 func newWSConn(conn *websocket.Conn, pendingWriteNum int, maxMsgLen int) *WSConn {
@@ -36,16 +34,14 @@ func (wsConn *WSConn) start() {
 				break
 			}
 
-			err := wsConn.conn.WriteMessage(websocket.BinaryMessage, b)
+			err := wsConn.conn.WriteMessage(websocket.TextMessage, b)
 			if err != nil {
 				break
 			}
 		}
 
-		wsConn.conn.Close()
-		wsConn.Lock()
-		wsConn.closeFlag = true
-		wsConn.Unlock()
+		_ = wsConn.conn.Close()
+		wsConn.closeFlag.Store(true)
 	}()
 }
 
@@ -53,11 +49,9 @@ func (wsConn *WSConn) doDestroy() {
 	wsConn.conn.UnderlyingConn().(*net.TCPConn).SetLinger(0)
 	wsConn.conn.Close()
 
-	wsConn.Lock()
-	defer wsConn.Unlock()
-	if !wsConn.closeFlag {
+	if !wsConn.closeFlag.Load() {
 		close(wsConn.writeChan)
-		wsConn.closeFlag = true
+		wsConn.closeFlag.Store(true)
 	}
 }
 
@@ -66,14 +60,13 @@ func (wsConn *WSConn) Destroy() {
 }
 
 func (wsConn *WSConn) Close() {
-	wsConn.Lock()
-	defer wsConn.Unlock()
-	if wsConn.closeFlag {
+
+	if wsConn.closeFlag.Load() {
 		return
 	}
 
 	wsConn.doWrite(nil)
-	wsConn.closeFlag = true
+	wsConn.closeFlag.Store(true)
 }
 
 func (wsConn *WSConn) doWrite(b []byte) {
@@ -95,23 +88,21 @@ func (wsConn *WSConn) RemoteAddr() net.Addr {
 }
 
 func (WSConn *WSConn) IsClosed() bool {
-	return WSConn.closeFlag
+	return WSConn.closeFlag.Load()
 }
 
 // goroutine not safe
 func (wsConn *WSConn) ReadMsg() ([]byte, error) {
+	//fmt.Printf("read msg %v \n", wsConn.conn)
 	_, b, err := wsConn.conn.ReadMessage()
 	return b, err
 }
 
 // args must not be modified by the others goroutines
 func (wsConn *WSConn) WriteMsg(args ...[]byte) error {
-	wsConn.Lock()
-	if wsConn.closeFlag {
-		wsConn.Unlock()
+	if wsConn.closeFlag.Load() {
 		return nil
 	}
-	wsConn.Unlock()
 
 	// get len
 	var msgLen int

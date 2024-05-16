@@ -2,7 +2,19 @@ package network
 
 import "net"
 
+const (
+	TYPE_AGENT_TCP       = 1
+	TYPE_AGENT_WEBSOCKET = 2
+	TYPE_AGENT_UDP       = 3
+)
+
 type Agent interface {
+	GetType() uint
+	SetType(style uint)
+
+	GetConn() Conn
+	GetIdleTime() int64
+
 	OnConnect()
 	Run(data []byte)
 	OnClose()

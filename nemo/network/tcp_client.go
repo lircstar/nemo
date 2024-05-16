@@ -13,7 +13,7 @@ type TCPClient struct {
 	PendingWriteNum int
 	AutoReconnect   bool
 	agent           Agent
-	NewAgent        func(*TCPConn) Agent
+	NewAgent        func(Conn) Agent
 	conn            net.Conn
 	closeFlag       bool
 	connected       bool
@@ -92,6 +92,7 @@ reconnect:
 	tcpConn.start()
 	client.connected = true
 	client.agent = client.NewAgent(tcpConn)
+	client.agent.SetType(TYPE_CLIENT_TCP)
 	client.agent.OnConnect()
 	client.agent.Run(nil)
 	client.connected = false
@@ -109,10 +110,22 @@ reconnect:
 	}
 }
 
+func (client *TCPClient) Send(msg interface{}) bool {
+	return client.agent.SendMessage(msg)
+}
+
 func (client *TCPClient) Close() {
 	client.closeFlag = true
 	_ = client.conn.Close()
 	client.conn = nil
+}
+
+func (client *TCPClient) GetType() uint {
+	return TYPE_CLIENT_TCP
+}
+
+func (client *TCPClient) GetAddress() string {
+	return client.Addr
 }
 
 func (client *TCPClient) GetConnected() bool {

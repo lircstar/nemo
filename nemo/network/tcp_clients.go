@@ -108,6 +108,7 @@ reconnect:
 	tcpConn.bindConn(conn)
 	tcpConn.start()
 	agent := client.NewAgent(tcpConn)
+	agent.SetType(TYPE_CLIENT_TCP)
 	agent.OnConnect()
 	agent.Run(nil)
 

@@ -1,7 +1,8 @@
-package nemo
+package server
 
 import (
 	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -11,9 +12,16 @@ import (
 	"github.com/lircstar/nemo/sys/log"
 )
 
+var server Server = nil
+
 var eventChan = make(chan *Event, 1024)
 var exitProcChan = make(chan int, 1)
 var endProcChan = make(chan int, 1)
+
+func New(s Server) Server {
+	server = s
+	return server
+}
 
 func mainProc() {
 	t1 := time.NewTimer(time.Second * 10)
@@ -27,8 +35,8 @@ func mainProc() {
 		case <-time.After(time.Millisecond * 30):
 			onLoopCallback()
 		case <-t1.C:
-			if nemoType == TYPE_SERVER_TCP {
-				loopTcpAgentPool()
+			if server.GetType() == TYPE_SERVER_TCP {
+				loopAgentPool()
 				loopUdpAgentPool()
 			}
 			t1.Reset(time.Second * 10)
@@ -46,13 +54,14 @@ func doFinish() {
 	log.Info("Nemo closed.")
 }
 
-func loopTcpAgentPool() {
-	tcpAgentPool.UsedRange(func(i interface{}) {
-		agent := i.(*TcpAgent)
+func loopAgentPool() {
+	agentPool.UsedRange(func(i interface{}) {
+		agent := i.(network.Agent)
 		if agent != nil {
-			if agent.conn != nil && !agent.conn.IsClosed() {
+			conn := agent.GetConn()
+			if conn != nil && !conn.IsClosed() {
 				if conf.TcpTimeout > 0 &&
-					time.Now().Unix()-agent.idleTime > int64(conf.TcpTimeout) {
+					time.Now().Unix()-agent.GetIdleTime() > int64(conf.TcpTimeout) {
 					agent.Close()
 				}
 			}
@@ -150,4 +159,40 @@ func closeSig() {
 
 	exitProcChan <- 0
 	<-endProcChan
+}
+
+// ////////////////////////////////////////////////////////////
+// server
+
+func Start() {
+
+	logInit()
+
+	monitor()
+
+	createAgentPool()
+
+	go mainProc()
+
+	server.Start()
+
+	log.Infof("Nemo %v starting up.", conf.Version)
+	log.Infof("Listen Address: %v", server.GetAddr())
+
+	// close
+	closeSig()
+
+	removeAgentPool()
+
+	logClose()
+
+}
+
+func destroy() {
+
+	if onDestroyCallback != nil {
+		onDestroyCallback()
+	}
+
+	server.Stop()
 }

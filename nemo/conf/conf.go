@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	Version = "1.0.0"
+
 	// system
 	LenStackBuf        = 4096
 	Monitor     string = "0" // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
@@ -21,35 +23,37 @@ var (
 	LogFile  bool   = false
 	//LogFlag int
 
+	RoutineSafe = true // message is routine safe.
+
 	// tcpserver
 	TCPAddr   string = "127.0.0.1:6000"
 	TCPInAddr string
 
-	LittleEndian       bool          = true
-	LenMsgLen          int           = 2
-	TcpMinMsgLen       int           = 1
-	TcpMaxMsgLen       int           = 4096
-	TcpMaxConnNum      int           = 65536
-	TcpTimeout         int           = 20 // socket read timeout seconds.
-	TcpConnectInterval time.Duration = 3 * time.Second
-	TcpRoutineSafe                   = true // message is routine safe.
+	LittleEndian    bool          = true
+	LenMsgLen       int           = 2
+	TcpMinMsgLen    int           = 1
+	TcpMaxMsgLen    int           = 4096
+	TcpMaxConnNum   int           = 65536
+	TcpTimeout      int           = 20 // socket read timeout seconds.
+	ConnectInterval time.Duration = 3 * time.Second
 
 	// tcpclient
-	TcpReconnect bool = true
+	Reconnect bool = true
 
 	// udpserver
-	UdpMaxConnNum  int = 65536
-	UdpTimeout     int = 10 // socket timeout after UDPTimeout seconds.
-	UdpMinMsgLen   int = 1
-	UdpMaxMsgLen   int = 4096
-	UdpRoutineSafe     = true // message is routine safe.
+	UDPAddr        string = "127.0.0.1:8000"
+	UdpMaxConnNum  int    = 65536
+	UdpTimeout     int    = 10 // socket timeout after UDPTimeout seconds.
+	UdpMinMsgLen   int    = 1
+	UdpMaxMsgLen   int    = 4096
+	UdpRoutineSafe        = true // message is routine safe.
 
 	// udpclient
 	UdpReconnect       bool          = true
 	UdpConnectInterval time.Duration = 3 * time.Second
 
 	//webserver
-	WSAddr      string        = "127.0.0.1:8000"
+	WSAddr      string        = "127.0.0.1:6000"
 	HTTPTimeout time.Duration = time.Second * 30
 	CertFile    string
 	KeyFile     string
@@ -80,6 +84,11 @@ func init() {
 	}
 
 	for k, v := range jsMap {
+
+		if k == "Version" {
+			Version = v.(string)
+		}
+
 		if k == "sys" {
 			sys := v.(map[string]interface{})
 			for k1, v1 := range sys {
@@ -111,11 +120,11 @@ func init() {
 				} else if k1 == "little_endian" {
 					LittleEndian = v1.(bool)
 				} else if k1 == "reconnect" {
-					TcpReconnect = v1.(bool)
-				} else if k1 == "reconnect" {
-					TcpConnectInterval = time.Duration(v1.(float64)) * time.Second
+					Reconnect = v1.(bool)
+				} else if k1 == "connectinterval" {
+					ConnectInterval = time.Duration(v1.(float64)) * time.Second
 				} else if k1 == "routine_safe" {
-					TcpRoutineSafe = v1.(bool)
+					RoutineSafe = v1.(bool)
 				} else {
 					log.Warnf("tcp define invalidate json key : %v", k1)
 				}
@@ -125,7 +134,9 @@ func init() {
 		if k == "udp" {
 			udp := v.(map[string]interface{})
 			for k1, v1 := range udp {
-				if k1 == "time_out" {
+				if k1 == "addr" {
+					UDPAddr = v1.(string)
+				} else if k1 == "time_out" {
 					UdpTimeout = int(v1.(float64))
 				} else if k1 == "max_msg_len" {
 					UdpMaxMsgLen = int(v1.(float64))
@@ -145,7 +156,7 @@ func init() {
 			}
 		}
 
-		if k == "web" {
+		if k == "wss" {
 			udp := v.(map[string]interface{})
 			for k1, v1 := range udp {
 				if k1 == "addr" {
@@ -156,6 +167,10 @@ func init() {
 					CertFile = v1.(string)
 				} else if k1 == "key_file" {
 					KeyFile = v1.(string)
+				} else if k1 == "reconnect" {
+					Reconnect = v1.(bool)
+				} else if k1 == "connectinterval" {
+					ConnectInterval = time.Duration(v1.(float64)) * time.Second
 				} else if k1 == "timeout" {
 					HTTPTimeout = time.Second * time.Duration(int(v1.(float64)))
 				} else {
