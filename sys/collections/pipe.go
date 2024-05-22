@@ -6,13 +6,13 @@ import (
 
 // 不限制大小，添加不发生阻塞，接收阻塞等待
 type Pipe struct {
-	list      []interface{}
+	list      []any
 	listGuard sync.Mutex
 	listCond  *sync.Cond
 }
 
 // 添加时不会发送阻塞
-func (pipe *Pipe) Add(msg interface{}) {
+func (pipe *Pipe) Add(msg any) {
 	pipe.listGuard.Lock()
 	pipe.list = append(pipe.list, msg)
 	pipe.listGuard.Unlock()
@@ -25,7 +25,7 @@ func (pipe *Pipe) Reset() {
 }
 
 // 如果没有数据，发生阻塞
-func (pipe *Pipe) Pick(retList *[]interface{}) (exit bool) {
+func (pipe *Pipe) Pick(retList *[]any) (exit bool) {
 
 	pipe.listGuard.Lock()
 

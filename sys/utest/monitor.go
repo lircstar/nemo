@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Command handler
+// CommandHandler Command handler
 var CommandHandler func(string) bool
 
 func init() {

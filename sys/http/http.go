@@ -9,7 +9,7 @@ import (
 	"github.com/lircstar/nemo/sys/log"
 )
 
-func Post(url string, obj interface{}, retObj interface{}) bool {
+func Post(url string, obj any, retObj any) bool {
 	contentType := "application/json;charset=utf-8"
 	bs, err := json.Marshal(obj)
 	if err != nil {
@@ -36,7 +36,7 @@ func Post(url string, obj interface{}, retObj interface{}) bool {
 	return true
 }
 
-func PostJson(url string, data string, retJson *map[string]interface{}) bool {
+func PostJson(url string, data string, retJson *map[string]any) bool {
 	contentType := "application/json;charset=utf-8"
 	body := bytes.NewBuffer([]byte(data))
 	resp, err := http.Post(url, contentType, body)
@@ -62,7 +62,7 @@ func PostJson(url string, data string, retJson *map[string]interface{}) bool {
 	return true
 }
 
-func PostWithHeader(url string, headParams map[string]string, obj interface{}, retObj interface{}) bool {
+func PostWithHeader(url string, headParams map[string]string, obj any, retObj any) bool {
 
 	bs, err := json.Marshal(obj)
 	if err != nil {

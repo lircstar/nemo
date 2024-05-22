@@ -48,7 +48,7 @@ func NewLockPool(minSize, maxSize, factor, pageSize int) *LockPool {
 	return pool
 }
 
-// LockPool try alloc a []byte from internal slab class if no free chunk in slab class Alloc will make one.
+// Alloc try alloc a []byte from internal slab class if no free chunk in slab class Alloc will make one.
 func (pool *LockPool) Alloc(size int) []byte {
 	if size <= pool.maxSize {
 		for i := 0; i < len(pool.classes); i++ {

@@ -37,7 +37,7 @@ func removeAgentPool() {
 	if agentPool == nil {
 		return
 	}
-	agentPool.Range(func(i interface{}) {
+	agentPool.Range(func(i any) {
 		if i != nil {
 			i = nil
 		}
@@ -80,7 +80,7 @@ func removeUdpAgentPool() {
 	if udpAgentPool == nil {
 		return
 	}
-	udpAgentPool.Range(func(i interface{}) {
+	udpAgentPool.Range(func(i any) {
 		if i != nil {
 			i = nil
 		}

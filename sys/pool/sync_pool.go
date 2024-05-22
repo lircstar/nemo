@@ -27,8 +27,8 @@ func NewSyncPool(minSize, maxSize, factor int) *SyncPool {
 	n = 0
 	for chunkSize := minSize; chunkSize <= maxSize; chunkSize *= factor {
 		pool.classesSize[n] = chunkSize
-		pool.classes[n].New = func(size int) func() interface{} {
-			return func() interface{} {
+		pool.classes[n].New = func(size int) func() any {
+			return func() any {
 				buf := make([]byte, size)
 				return &buf
 			}

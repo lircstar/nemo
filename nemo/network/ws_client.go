@@ -114,7 +114,7 @@ reconnect:
 	}
 }
 
-func (client *WSClient) Send(msg interface{}) bool {
+func (client *WSClient) Send(msg any) bool {
 	return client.agent.SendMessage(msg)
 }
 

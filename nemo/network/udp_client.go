@@ -97,7 +97,7 @@ func (client *UDPClient) Close() {
 	}
 }
 
-func (client *UDPClient) Send(msg interface{}) bool {
+func (client *UDPClient) Send(msg any) bool {
 	if client.agent != nil {
 		return client.agent.SendMessage(msg)
 	}

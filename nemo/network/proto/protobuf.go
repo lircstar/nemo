@@ -48,7 +48,7 @@ func (p *Processor) GetByteOrder() bool {
 }
 
 // Register It's dangerous to call the method on routing or marshaling (unmarshaling)
-func (p *Processor) Register(msg interface{}) {
+func (p *Processor) Register(msg any) {
 	msgType := reflect.TypeOf(msg)
 	if msgType == nil || msgType.Kind() != reflect.Ptr {
 		log.Fatalf("protobuf message pointer required")
@@ -68,7 +68,7 @@ func (p *Processor) Register(msg interface{}) {
 }
 
 // SetHandler It's dangerous to call the method on routing or marshaling (unmarshaling)
-func (p *Processor) SetHandler(msg interface{}, msgHandler network.MsgHandler) {
+func (p *Processor) SetHandler(msg any, msgHandler network.MsgHandler) {
 	msgType := reflect.TypeOf(msg)
 	id, ok := p.msgID[msgType]
 	if !ok {
@@ -89,7 +89,7 @@ func (p *Processor) SetRawHandler(id uint16, msgRawHandler network.MsgHandler) {
 }
 
 // Route goroutine safe
-func (p *Processor) Route(agent network.Agent, msg interface{}, userData interface{}) error {
+func (p *Processor) Route(agent network.Agent, msg any, userData any) error {
 	// raw
 	if msgRaw, ok := msg.(MsgRaw); ok {
 		i, ok := p.msgInfo[msgRaw.msgID]
@@ -97,7 +97,7 @@ func (p *Processor) Route(agent network.Agent, msg interface{}, userData interfa
 			return fmt.Errorf("message %v not registered", msgRaw.msgID)
 		}
 		if i.msgRawHandler != nil {
-			i.msgRawHandler(agent, []interface{}{msgRaw.msgID, msgRaw.msgRawData, userData})
+			i.msgRawHandler(agent, []any{msgRaw.msgID, msgRaw.msgRawData, userData})
 		}
 		return nil
 	}
@@ -110,14 +110,14 @@ func (p *Processor) Route(agent network.Agent, msg interface{}, userData interfa
 	}
 	i := p.msgInfo[id]
 	if i.msgHandler != nil {
-		i.msgHandler(agent, []interface{}{msg, userData})
+		i.msgHandler(agent, []any{msg, userData})
 	}
 
 	return nil
 }
 
 // Unmarshal goroutine safe
-func (p *Processor) Unmarshal(data []byte) (interface{}, error) {
+func (p *Processor) Unmarshal(data []byte) (any, error) {
 	if len(data) < 2 {
 		return nil, errors.New("protobuf data too short")
 	}
@@ -144,7 +144,7 @@ func (p *Processor) Unmarshal(data []byte) (interface{}, error) {
 }
 
 // Marshal goroutine safe
-func (p *Processor) Marshal(msg interface{}) ([][]byte, error) {
+func (p *Processor) Marshal(msg any) ([][]byte, error) {
 	msgType := reflect.TypeOf(msg)
 
 	// id

@@ -170,7 +170,7 @@ func (server *WSServer) Start() {
 func (server *WSServer) Close() {
 	server.ln.Close()
 
-	server.handler.connPool.Range(func(i interface{}) {
+	server.handler.connPool.Range(func(i any) {
 		if i != nil {
 			conn := i.(*WSConn).conn
 			if conn != nil {

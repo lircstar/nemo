@@ -19,7 +19,7 @@ type Agent interface {
 	Run(data []byte)
 	OnClose()
 
-	SendMessage(msg interface{}) bool
+	SendMessage(msg any) bool
 	SendRawMessage(id uint16, msg []byte) bool
 
 	LocalAddr() net.Addr
@@ -31,6 +31,6 @@ type Agent interface {
 	SetConnectionId(id uint64)
 	ConnectionId() uint64
 
-	SetUserData(data interface{})
-	UserData() interface{}
+	SetUserData(data any)
+	UserData() any
 }

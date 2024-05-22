@@ -55,7 +55,7 @@ func doFinish() {
 }
 
 func loopAgentPool() {
-	agentPool.UsedRange(func(i interface{}) {
+	agentPool.UsedRange(func(i any) {
 		agent := i.(network.Agent)
 		if agent != nil {
 			conn := agent.GetConn()

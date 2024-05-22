@@ -16,7 +16,7 @@ type ConnPool struct {
 }
 
 // Search multiple rows
-func (p *ConnPool) Query(query string, args ...interface{}) (rows *sql.Rows) {
+func (p *ConnPool) Query(query string, args ...any) (rows *sql.Rows) {
 	rows, err := p.db.Query(query, args...)
 	if err != nil {
 		p.fail("QUERY", query, err, args...)
@@ -26,12 +26,12 @@ func (p *ConnPool) Query(query string, args ...interface{}) (rows *sql.Rows) {
 }
 
 // Search only one row.
-func (p *ConnPool) QueryRow(query string, args ...interface{}) (row *sql.Row) {
+func (p *ConnPool) QueryRow(query string, args ...any) (row *sql.Row) {
 	return p.db.QueryRow(query, args...)
 }
 
 // Execute with no rows return, but return result.
-func (p *ConnPool) Exec(query string, args ...interface{}) (res sql.Result, err error) {
+func (p *ConnPool) Exec(query string, args ...any) (res sql.Result, err error) {
 	res, err = p.db.Exec(query, args...)
 	if err != nil {
 		p.fail("EXEC", query, err, args...)
@@ -66,7 +66,7 @@ func (p *ConnPool) Close() {
 	p.db.Close()
 }
 
-func (p *ConnPool) fail(method, query string, err error, args ...interface{}) {
+func (p *ConnPool) fail(method, query string, err error, args ...any) {
 	log.Errorf("Failed to execute SQL [%s][%s] [Parameter]:%v [Error]:%s\n", method, query, args, err.Error())
 }
 

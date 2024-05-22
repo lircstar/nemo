@@ -53,7 +53,7 @@ func Dirify(dir string) string {
 	return dir
 }
 
-// Change string to uint64 hash value
+// StringHash Change string to uint64 hash value
 func StringHash(s string) (hash uint16) {
 	for _, c := range s {
 		ch := uint16(c)

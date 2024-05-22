@@ -110,7 +110,7 @@ reconnect:
 	}
 }
 
-func (client *TCPClient) Send(msg interface{}) bool {
+func (client *TCPClient) Send(msg any) bool {
 	return client.agent.SendMessage(msg)
 }
 

@@ -8,7 +8,7 @@ const (
 
 type Client interface {
 	Start()
-	Send(msg interface{}) bool
+	Send(msg any) bool
 	Close()
 
 	GetType() uint

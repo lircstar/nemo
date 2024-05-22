@@ -18,7 +18,7 @@ type Agent struct {
 	idleTime int64
 	pool     *pool.ObjectPool
 	//outFlag  bool // it is a flag of connection connect to other server.
-	userData interface{}
+	userData any
 }
 
 func (a *Agent) GetType() uint {
@@ -68,7 +68,7 @@ func (a *Agent) Run(data []byte) {
 	}
 }
 
-func (a *Agent) SendMessage(msg interface{}) bool {
+func (a *Agent) SendMessage(msg any) bool {
 	if processor != nil {
 		data, err := processor.Marshal(msg)
 		if err != nil {
@@ -134,11 +134,11 @@ func (a *Agent) RemoteAddr() net.Addr {
 	return a.conn.RemoteAddr()
 }
 
-func (a *Agent) UserData() interface{} {
+func (a *Agent) UserData() any {
 	return a.userData
 }
 
-func (a *Agent) SetUserData(data interface{}) {
+func (a *Agent) SetUserData(data any) {
 	a.userData = data
 }
 

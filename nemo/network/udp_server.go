@@ -156,7 +156,7 @@ func (server *UDPServer) Close() {
 
 	server.running = false
 	// connection pool
-	server.connPool.Range(func(i interface{}) {
+	server.connPool.Range(func(i any) {
 		if i != nil {
 			conn := i.(*UDPConn).conn
 			if conn != nil {

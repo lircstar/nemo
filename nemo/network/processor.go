@@ -4,25 +4,25 @@ import (
 	"reflect"
 )
 
-type MsgHandler func(Agent, []interface{})
+type MsgHandler func(Agent, []any)
 
 type Processor interface {
 
 	// Route must goroutine safe
-	Route(agent Agent, msg interface{}, userData interface{}) error
+	Route(agent Agent, msg any, userData any) error
 	// Unmarshal must goroutine safe
-	Unmarshal(data []byte) (interface{}, error)
+	Unmarshal(data []byte) (any, error)
 	// Marshal must goroutine safe
-	Marshal(msg interface{}) ([][]byte, error)
+	Marshal(msg any) ([][]byte, error)
 
 	// GetByteOrder get current message buffer's bytes order.
 	GetByteOrder() bool
 
 	// Register register message into processor.
-	Register(msg interface{})
+	Register(msg any)
 
 	// SetHandler set message handling function
-	SetHandler(msg interface{}, msgHandler MsgHandler)
+	SetHandler(msg any, msgHandler MsgHandler)
 
 	// SetRawHandler set raw message handling function.
 	SetRawHandler(id uint16, msgRawHandler MsgHandler)

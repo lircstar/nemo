@@ -186,7 +186,7 @@ func (log *Logger) Output(calldepth int, prefix string, text string, c Color, ou
 	return err
 }
 
-func (log *Logger) Log(c Color, level Level, format string, v ...interface{}) {
+func (log *Logger) Log(c Color, level Level, format string, v ...any) {
 
 	if level < log.level {
 		return
@@ -231,44 +231,44 @@ func (log *Logger) Log(c Color, level Level, format string, v ...interface{}) {
 
 }
 
-func (log *Logger) Debugf(format string, v ...interface{}) {
+func (log *Logger) Debugf(format string, v ...any) {
 	log.Log(ColorFromLevel(Level_Debug), Level_Debug, format, v...)
 }
 
-func (log *Logger) Debug(v ...interface{}) {
+func (log *Logger) Debug(v ...any) {
 	log.Log(ColorFromLevel(Level_Debug), Level_Debug, "", v...)
 }
 
-func (log *Logger) Infof(format string, v ...interface{}) {
+func (log *Logger) Infof(format string, v ...any) {
 	log.Log(ColorFromLevel(Level_Info), Level_Info, format, v...)
 }
 
-func (log *Logger) Info(v ...interface{}) {
+func (log *Logger) Info(v ...any) {
 	log.Log(ColorFromLevel(Level_Info), Level_Info, "", v...)
 }
 
-func (log *Logger) Warnf(format string, v ...interface{}) {
+func (log *Logger) Warnf(format string, v ...any) {
 	log.Log(ColorFromLevel(Level_Warn), Level_Warn, format, v...)
 }
 
-func (log *Logger) Warn(v ...interface{}) {
+func (log *Logger) Warn(v ...any) {
 	log.Log(ColorFromLevel(Level_Warn), Level_Warn, "", v...)
 }
 
-func (log *Logger) Errorf(format string, v ...interface{}) {
+func (log *Logger) Errorf(format string, v ...any) {
 	log.Log(ColorFromLevel(Level_Error), Level_Error, format, v...)
 }
 
-func (log *Logger) Error(v ...interface{}) {
+func (log *Logger) Error(v ...any) {
 	log.Log(ColorFromLevel(Level_Error), Level_Error, "", v...)
 }
 
-func (log *Logger) Fatalf(format string, v ...interface{}) {
+func (log *Logger) Fatalf(format string, v ...any) {
 
 	log.Log(ColorFromLevel(Level_Fatal), Level_Fatal, format, v...)
 }
 
-func (log *Logger) Fatal(v ...interface{}) {
+func (log *Logger) Fatal(v ...any) {
 	log.Log(ColorFromLevel(Level_Fatal), Level_Fatal, "", v...)
 }
 
@@ -386,11 +386,11 @@ func Close() {
 	gLogger.Close()
 }
 
-func Debugf(format string, v ...interface{}) {
+func Debugf(format string, v ...any) {
 	gLogger.Log(ColorFromLevel(Level_Debug), Level_Debug, format, v...)
 }
 
-func Debug(v ...interface{}) {
+func Debug(v ...any) {
 	gLogger.Log(ColorFromLevel(Level_Debug), Level_Debug, "", v...)
 }
 

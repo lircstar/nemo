@@ -64,7 +64,7 @@ var (
 	PendingWriteNum int = 100
 )
 
-var CallBack func(k string, v map[string]interface{})
+var CallBack func(k string, v map[string]any)
 
 func init() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -77,7 +77,7 @@ func init() {
 		log.Fatalf("%v", err)
 	}
 
-	var jsMap map[string]interface{}
+	var jsMap map[string]any
 	err = json.Unmarshal(data, &jsMap)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -90,7 +90,7 @@ func init() {
 		}
 
 		if k == "sys" {
-			sys := v.(map[string]interface{})
+			sys := v.(map[string]any)
 			for k1, v1 := range sys {
 				if k1 == "monitor" {
 					Monitor = v1.(string)
@@ -105,7 +105,7 @@ func init() {
 		}
 
 		if k == "tcp" {
-			tcp := v.(map[string]interface{})
+			tcp := v.(map[string]any)
 			for k1, v1 := range tcp {
 				if k1 == "addr" {
 					TCPAddr = v1.(string)
@@ -132,7 +132,7 @@ func init() {
 		}
 
 		if k == "udp" {
-			udp := v.(map[string]interface{})
+			udp := v.(map[string]any)
 			for k1, v1 := range udp {
 				if k1 == "addr" {
 					UDPAddr = v1.(string)
@@ -157,7 +157,7 @@ func init() {
 		}
 
 		if k == "wss" {
-			udp := v.(map[string]interface{})
+			udp := v.(map[string]any)
 			for k1, v1 := range udp {
 				if k1 == "addr" {
 					WSAddr = v1.(string)
@@ -180,7 +180,7 @@ func init() {
 		}
 
 		if CallBack != nil {
-			CallBack(k, v.(map[string]interface{}))
+			CallBack(k, v.(map[string]any))
 		}
 	}
 }

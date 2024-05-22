@@ -32,18 +32,18 @@ type toString interface {
 }
 
 type Equals interface {
-	Equals(interface{}) bool
+	Equals(any) bool
 }
 
-func Check(t *testing.T, condition bool, args ...interface{}) bool {
+func Check(t *testing.T, condition bool, args ...any) bool {
 	return check(t, condition, "check", t.Fail, args...)
 }
 
-func Assert(t *testing.T, condition bool, args ...interface{}) {
+func Assert(t *testing.T, condition bool, args ...any) {
 	check(t, condition, "assert", t.FailNow, args...)
 }
 
-func check(t *testing.T, condition bool, tp string, f func(), args ...interface{}) bool {
+func check(t *testing.T, condition bool, tp string, f func(), args ...any) bool {
 	if condition {
 		return true
 	}
@@ -62,11 +62,11 @@ func check(t *testing.T, condition bool, tp string, f func(), args ...interface{
 	return false
 }
 
-func IsNil(t *testing.T, v interface{}) bool {
+func IsNil(t *testing.T, v any) bool {
 	return isNil(t, v, t.Fail)
 }
 
-func IsNilNow(t *testing.T, v interface{}) {
+func IsNilNow(t *testing.T, v any) {
 	isNil(t, v, t.FailNow)
 }
 

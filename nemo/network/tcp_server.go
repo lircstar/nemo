@@ -141,7 +141,7 @@ func (server *TCPServer) Close() {
 	_ = server.ln.Close()
 	server.wgLn.Wait()
 
-	server.connPool.Range(func(i interface{}) {
+	server.connPool.Range(func(i any) {
 		if i != nil {
 			conn := i.(*TCPConn).conn
 			if conn != nil {

@@ -29,8 +29,8 @@ type Client interface {
 
 type Event struct {
 	agent    network.Agent
-	msg      interface{}
-	userData interface{}
+	msg      any
+	userData any
 }
 
 var processor network.Processor
@@ -65,7 +65,7 @@ func RegisterProcessor(pro network.Processor) {
 	processor = pro
 }
 
-func RegisterMessage(msg interface{}, msgHandler network.MsgHandler) {
+func RegisterMessage(msg any, msgHandler network.MsgHandler) {
 	processor.Register(msg)
 	processor.SetHandler(msg, msgHandler)
 
@@ -75,7 +75,7 @@ func RegisterRawMessage(id uint16, msgHandler network.MsgHandler) {
 	processor.SetRawHandler(id, msgHandler)
 }
 
-func RegisterMessageNoHandler(msg interface{}) {
+func RegisterMessageNoHandler(msg any) {
 	processor.Register(msg)
 }
 

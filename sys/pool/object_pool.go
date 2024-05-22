@@ -8,21 +8,21 @@ import (
 type ObjectPool struct {
 	sync.Mutex
 
-	usedObjs map[interface{}]struct{}
+	usedObjs map[any]struct{}
 	freeObjs *col.Queue
 }
 
 func NewObjectPool() *ObjectPool {
 
 	class := new(ObjectPool)
-	class.usedObjs = make(map[interface{}]struct{}, 1024)
+	class.usedObjs = make(map[any]struct{}, 1024)
 	class.freeObjs = col.NewQueue(1024)
 
 	return class
 }
 
 // Create object to pool.
-func (class *ObjectPool) Create(obj interface{}) {
+func (class *ObjectPool) Create(obj any) {
 	class.Lock()
 	defer class.Unlock()
 
@@ -30,7 +30,7 @@ func (class *ObjectPool) Create(obj interface{}) {
 }
 
 // Get a free object from pool.
-func (class *ObjectPool) Get() interface{} {
+func (class *ObjectPool) Get() any {
 	class.Lock()
 	defer class.Unlock()
 
@@ -41,7 +41,7 @@ func (class *ObjectPool) Get() interface{} {
 }
 
 // Free an object to pool.
-func (class *ObjectPool) Free(obj interface{}) {
+func (class *ObjectPool) Free(obj any) {
 	class.Lock()
 	defer class.Unlock()
 
@@ -50,14 +50,14 @@ func (class *ObjectPool) Free(obj interface{}) {
 }
 
 // Bind some value to used pool object.
-func (class *ObjectPool) Bind(obj interface{}, val struct{}) {
+func (class *ObjectPool) Bind(obj any, val struct{}) {
 	class.Lock()
 	defer class.Unlock()
 	class.usedObjs[obj] = val
 }
 
 // Free all objects
-func (class *ObjectPool) Range(f func(interface{})) {
+func (class *ObjectPool) Range(f func(any)) {
 	class.Lock()
 	defer class.Unlock()
 
@@ -67,7 +67,7 @@ func (class *ObjectPool) Range(f func(interface{})) {
 	class.freeObjs.Range(f)
 }
 
-func (class *ObjectPool) UsedRange(f func(interface{})) {
+func (class *ObjectPool) UsedRange(f func(any)) {
 	class.Lock()
 	defer class.Unlock()
 
@@ -76,14 +76,14 @@ func (class *ObjectPool) UsedRange(f func(interface{})) {
 	}
 }
 
-// Return the count of current used.
+// UsedCount Return the count of current used.
 func (class *ObjectPool) UsedCount() int {
 	class.Lock()
 	defer class.Unlock()
 	return len(class.usedObjs)
 }
 
-// Return the count of current free.
+// FreeCount Return the count of current free.
 func (class *ObjectPool) FreeCount() int {
 	class.Lock()
 	defer class.Unlock()

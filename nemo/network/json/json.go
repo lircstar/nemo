@@ -37,7 +37,7 @@ func NewProcessor() *Processor {
 
 // Register
 // It's dangerous to call the method on routing or marshaling (unmarshaling)
-func (p *Processor) Register(msg interface{}) {
+func (p *Processor) Register(msg any) {
 	msgType := reflect.TypeOf(msg)
 	if msgType == nil || msgType.Kind() != reflect.Ptr {
 		log.Fatal("json message pointer required")
@@ -65,7 +65,7 @@ func (p *Processor) Register(msg interface{}) {
 
 // SetHandler
 // It's dangerous to call the method on routing or marshaling (unmarshalling)
-func (p *Processor) SetHandler(msg interface{}, msgHandler network.MsgHandler) {
+func (p *Processor) SetHandler(msg any, msgHandler network.MsgHandler) {
 	msgType := reflect.TypeOf(msg)
 	id, ok := p.msgID[msgType]
 	if !ok {
@@ -88,7 +88,7 @@ func (p *Processor) SetRawHandler(id uint16, msgRawHandler network.MsgHandler) {
 }
 
 // Route goroutine safe
-func (p *Processor) Route(agent network.Agent, msg interface{}, userData interface{}) error {
+func (p *Processor) Route(agent network.Agent, msg any, userData any) error {
 	// raw
 	if msgRaw, ok := msg.(MsgRaw); ok {
 		i, ok := p.msgInfo[msgRaw.msgID]
@@ -96,7 +96,7 @@ func (p *Processor) Route(agent network.Agent, msg interface{}, userData interfa
 			return fmt.Errorf("message %v not registered", msgRaw.msgID)
 		}
 		if i.msgRawHandler != nil {
-			i.msgRawHandler(agent, []interface{}{msgRaw.msgID, msgRaw.msgRawData, userData})
+			i.msgRawHandler(agent, []any{msgRaw.msgID, msgRaw.msgRawData, userData})
 		}
 		return nil
 	}
@@ -118,14 +118,14 @@ func (p *Processor) Route(agent network.Agent, msg interface{}, userData interfa
 		return fmt.Errorf("message %v not registered", msgId)
 	}
 	if i.msgHandler != nil {
-		i.msgHandler(agent, []interface{}{msg, userData})
+		i.msgHandler(agent, []any{msg, userData})
 	}
 
 	return nil
 }
 
 // Unmarshal goroutine safe
-func (p *Processor) Unmarshal(data []byte) (interface{}, error) {
+func (p *Processor) Unmarshal(data []byte) (any, error) {
 	var m map[uint16]json.RawMessage
 	err := json.Unmarshal(data, &m)
 	if err != nil {
@@ -154,7 +154,7 @@ func (p *Processor) Unmarshal(data []byte) (interface{}, error) {
 }
 
 // Marshal goroutine safe
-func (p *Processor) Marshal(msg interface{}) ([][]byte, error) {
+func (p *Processor) Marshal(msg any) ([][]byte, error) {
 	msgType := reflect.TypeOf(msg)
 	if msgType == nil || msgType.Kind() != reflect.Ptr {
 		return nil, errors.New("json message pointer required")
@@ -170,7 +170,7 @@ func (p *Processor) Marshal(msg interface{}) ([][]byte, error) {
 	}
 
 	// data
-	m := map[uint16]interface{}{msgId: msg}
+	m := map[uint16]any{msgId: msg}
 	data, err := json.Marshal(m)
 
 	return [][]byte{data}, err

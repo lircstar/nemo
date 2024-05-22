@@ -71,7 +71,7 @@ func (queue *eventQueue) StartLoop() EventQueue {
 
 	go func() {
 
-		var writeList []interface{}
+		var writeList []any
 
 		for {
 			writeList = writeList[0:0]
@@ -118,6 +118,7 @@ func NewEventQueue() EventQueue {
 		Pipe: NewPipe(),
 	}
 }
+
 //
 //// 在会话对应的Peer上的事件队列中执行callback，如果没有队列，则马上执行
 //func SessionQueuedCall(ses Session, callback func()) {
