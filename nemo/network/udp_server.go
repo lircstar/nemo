@@ -125,7 +125,7 @@ func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 	if !ok {
 		conn := server.createConn()
 		conn.timeEvent = server.timeEvent
-		conn.closeFlag = false
+		conn.closeFlag.Store(false)
 		conn.conn = server.ln
 		conn.remote = addr
 		conn.key = key
