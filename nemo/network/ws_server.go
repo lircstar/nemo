@@ -34,9 +34,7 @@ type WSHandler struct {
 	newAgent        func(Conn) Agent
 	upgrader        websocket.Upgrader
 	connPool        *pool.ObjectPool
-	//conns           WebsocketConnSet
-	//mutexConns      sync.Mutex
-	wg sync.WaitGroup
+	wg              sync.WaitGroup
 }
 
 func (handler *WSHandler) newWSConn(conn *websocket.Conn, pendingWriteNum int, maxMsgLen int) *WSConn {

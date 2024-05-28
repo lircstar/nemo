@@ -3,6 +3,7 @@ package network
 import (
 	"github.com/lircstar/nemo/sys/log"
 	"github.com/lircstar/nemo/sys/pool"
+	"github.com/lircstar/nemo/sys/util"
 	"net"
 	"sync"
 	"time"
@@ -13,11 +14,10 @@ type UDPServer struct {
 	MaxConnNum int
 	NewAgent   func(Conn) Agent
 	ln         *net.UDPConn
-	agents     AgentSet
+	agents     *util.SafeMap
 	connPool   *pool.ObjectPool
 
-	wgLn    sync.WaitGroup
-	lkAgent sync.RWMutex
+	wgLn sync.WaitGroup
 
 	// msg
 	MinMsgLen int
@@ -45,7 +45,7 @@ func (server *UDPServer) init() {
 		log.Warnf("invalid UDP Server MaxConnNum, reset to %v", server.MaxConnNum)
 	}
 
-	server.agents = make(AgentSet, server.MaxConnNum)
+	server.agents = util.NewSafeMap(server.MaxConnNum)
 
 	// connection pool
 	server.connPool = pool.NewObjectPool()
@@ -76,7 +76,7 @@ func (server *UDPServer) run() {
 		return
 	}
 
-	if len(server.agents) >= server.MaxConnNum {
+	if server.agents.Len() >= server.MaxConnNum {
 		log.Debug("udp server too many connections")
 	}
 
@@ -120,11 +120,9 @@ func (server *UDPServer) createConn() *UDPConn {
 
 func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 	key := newConnTrackKey(addr)
-	server.lkAgent.Lock()
-	agent := server.agents[*key]
-	server.lkAgent.Unlock()
-
-	if agent == nil {
+	tmp, ok := server.agents.Load(key)
+	agent := tmp.(Agent)
+	if !ok {
 		conn := server.createConn()
 		conn.timeEvent = server.timeEvent
 		conn.closeFlag = false
@@ -134,9 +132,7 @@ func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 		agent = server.NewAgent(conn)
 		agent.SetType(TYPE_AGENT_UDP)
 		conn.agent = agent
-		server.lkAgent.Lock()
-		server.agents[*key] = agent
-		server.lkAgent.Unlock()
+		server.agents.Store(key, agent)
 		agent.OnConnect()
 	}
 	return agent
@@ -166,9 +162,14 @@ func (server *UDPServer) Close() {
 	})
 	server.connPool = nil
 
-	for _, agent := range server.agents {
-		agent.Close()
-	}
+	server.agents.Range(func(key any, agent any) bool {
+		if agent != nil {
+			agent := agent.(Agent)
+			agent.Close()
+		}
+		return true
+	})
+
 	server.agents = nil
 }
 
@@ -181,9 +182,7 @@ func (server *UDPServer) goRun() {
 			server.delConn(udpConn)
 
 			if udpConn.agent != nil {
-				server.lkAgent.Lock()
-				delete(server.agents, *udpConn.key)
-				server.lkAgent.Unlock()
+				server.agents.Delete(udpConn.key)
 				udpConn.agent.OnClose()
 			}
 		case <-time.After(time.Second * 60):

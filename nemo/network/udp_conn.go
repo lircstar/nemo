@@ -2,30 +2,25 @@ package network
 
 import (
 	"net"
-	"sync"
+	"sync/atomic"
 )
 
-type AgentSet map[connTrackKey] Agent
-
-
 type UDPConn struct {
-	sync.Mutex
+	conn   *net.UDPConn
+	remote *net.UDPAddr
 
-	conn    	*net.UDPConn
-	remote     	*net.UDPAddr
+	closeFlag atomic.Bool
+	key       *connTrackKey
+	agent     Agent
 
-	closeFlag 	bool
-	key       	*connTrackKey
-	agent 		Agent
+	msgParser *UdpMsgParser
 
-	msgParser 	*UdpMsgParser
-
-	timeEvent	chan Conn
+	timeEvent chan Conn
 }
 
 func newUDPConn(msgParser *UdpMsgParser) *UDPConn {
 	udpConn := new(UDPConn)
-	udpConn.closeFlag = false
+	udpConn.closeFlag.Store(false)
 	udpConn.timeEvent = nil
 	udpConn.msgParser = msgParser
 	return udpConn
@@ -46,16 +41,14 @@ func (conn *UDPConn) RemoteAddr() net.Addr {
 }
 
 func (conn *UDPConn) IsClosed() bool {
-	return conn.closeFlag
+	return conn.closeFlag.Load()
 }
 
 func (conn *UDPConn) Close() {
-	conn.Lock()
-	defer conn.Unlock()
 	if conn.timeEvent != nil {
 		conn.timeEvent <- conn
 	}
-	conn.closeFlag = true
+	conn.closeFlag.Store(true)
 }
 
 func (conn *UDPConn) Destroy() {

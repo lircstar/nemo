@@ -1,24 +1,25 @@
 package network
 
 import (
+	"github.com/lircstar/nemo/sys/util"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/lircstar/nemo/sys/log"
 )
 
 type TCPClients struct {
-	sync.Mutex
 	Addr            string
 	ConnNum         int
 	ConnectInterval time.Duration
 	PendingWriteNum int
 	AutoReconnect   bool
 	NewAgent        func(*TCPConn) Agent
-	conns           ConnSet
+	conns           *util.SafeMap
 	wg              sync.WaitGroup
-	closeFlag       bool
+	closeFlag       atomic.Bool
 
 	// msg parser
 	LenMsgLen    int
@@ -37,9 +38,6 @@ func (client *TCPClients) Start() {
 }
 
 func (client *TCPClients) init() {
-	client.Lock()
-	defer client.Unlock()
-
 	if client.ConnNum <= 0 {
 		client.ConnNum = 1
 		log.Warnf("invalid ConnNum, reset to %v", client.ConnNum)
@@ -60,8 +58,8 @@ func (client *TCPClients) init() {
 		log.Fatal("client is running")
 	}
 
-	client.conns = make(ConnSet)
-	client.closeFlag = false
+	client.conns = util.NewSafeMap(client.ConnNum)
+	client.closeFlag.Store(false)
 
 	// msg parser
 	msgParser := newTcpMsgParser()
@@ -73,7 +71,7 @@ func (client *TCPClients) init() {
 func (client *TCPClients) dial() net.Conn {
 	for {
 		conn, err := net.Dial("tcp", client.Addr)
-		if err == nil || client.closeFlag {
+		if err == nil || client.closeFlag.Load() {
 			return conn
 		}
 
@@ -92,18 +90,14 @@ reconnect:
 		return
 	}
 
-	client.Lock()
-	if client.closeFlag {
-		client.Unlock()
+	if client.closeFlag.Load() {
 		err := conn.Close()
 		if err != nil {
 			return
 		}
 		return
 	}
-	client.conns[conn] = struct{}{}
-	client.Unlock()
-
+	client.conns.Store(conn, struct{}{})
 	tcpConn := newTCPConn(client.PendingWriteNum, client.msgParser)
 	tcpConn.bindConn(conn)
 	tcpConn.start()
@@ -114,11 +108,9 @@ reconnect:
 
 	// cleanup
 	tcpConn.Close()
-	client.Lock()
-	delete(client.conns, conn)
+	client.conns.Delete(conn)
 	conn = nil
 	tcpConn = nil
-	client.Unlock()
 	agent.OnClose()
 	agent = nil
 
@@ -129,27 +121,29 @@ reconnect:
 }
 
 func (client *TCPClients) Close() {
-	client.Lock()
-	client.closeFlag = true
-	for conn := range client.conns {
+
+	client.closeFlag.Store(true)
+
+	client.conns.Range(func(key any, value any) bool {
+		conn := key.(net.Conn)
 		err := conn.Close()
 		if err != nil {
-			continue
+			log.Errorf("close connection error: %v", err)
 		}
-	}
+		return true
+	})
 	client.conns = nil
-	client.Unlock()
-
 	client.wg.Wait()
 }
 
 func (client *TCPClients) IsIn(tcpConn *TCPConn) bool {
-	client.Lock()
-	defer client.Unlock()
-	for conn := range client.conns {
+	ret := false
+	client.conns.Range(func(key any, value any) bool {
+		conn := key.(net.Conn)
 		if conn == tcpConn.conn {
-			return true
+			ret = true
 		}
-	}
-	return false
+		return true
+	})
+	return ret
 }

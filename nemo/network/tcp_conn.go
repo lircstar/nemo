@@ -6,11 +6,8 @@ import (
 	"sync/atomic"
 )
 
-type ConnSet map[net.Conn]struct{}
-
 type TCPConn struct {
 	//ConnOption
-
 	conn      net.Conn
 	writeChan chan []byte
 	closeFlag atomic.Bool

@@ -102,14 +102,14 @@ func (a *Agent) SendRawMessage(id uint16, msg []byte) bool {
 	return true
 }
 
-// goroutine safe
+// OnConnect goroutine safe
 func (a *Agent) OnConnect() {
 	if onConnectCallback != nil {
 		onConnectCallback(a)
 	}
 }
 
-// goroutine safe
+// OnClose goroutine safe
 func (a *Agent) OnClose() {
 	if onCloseCallback != nil {
 		onCloseCallback(a)
