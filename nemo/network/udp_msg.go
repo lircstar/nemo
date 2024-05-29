@@ -40,7 +40,7 @@ func (p *UdpMsgParser) SetByteOrder(littleEndian bool) {
 
 // goroutine safe
 func (p *UdpMsgParser) Read(conn *UDPConn) ([]byte, error) {
-	if conn.closeFlag || conn.conn == nil {
+	if conn.closeFlag.Load() || conn.conn == nil {
 		return nil, errors.New("connection is closed")
 	}
 	msgData := make([]byte, p.maxMsgLen)
@@ -76,7 +76,7 @@ func (p *UdpMsgParser) Write(conn *UDPConn, args ...[]byte) error {
 		l += len(args[i])
 	}
 
-	if conn.closeFlag || conn.conn == nil {
+	if conn.closeFlag.Load() || conn.conn == nil {
 		return errors.New("connection is closed")
 	}
 	var err error

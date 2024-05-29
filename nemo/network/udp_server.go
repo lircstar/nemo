@@ -121,7 +121,7 @@ func (server *UDPServer) createConn() *UDPConn {
 func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 	key := newConnTrackKey(addr)
 	tmp, ok := server.agents.Load(key)
-	agent := tmp.(Agent)
+	var agent Agent
 	if !ok {
 		conn := server.createConn()
 		conn.timeEvent = server.timeEvent
@@ -134,6 +134,8 @@ func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 		conn.agent = agent
 		server.agents.Store(key, agent)
 		agent.OnConnect()
+	} else {
+		agent = tmp.(Agent)
 	}
 	return agent
 }
