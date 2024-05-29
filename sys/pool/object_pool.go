@@ -6,7 +6,7 @@ import (
 )
 
 type ObjectPool struct {
-	sync.Mutex
+	sync.RWMutex
 
 	usedObjs map[any]struct{}
 	freeObjs *col.Queue
@@ -31,8 +31,8 @@ func (class *ObjectPool) Create(obj any) {
 
 // Get a free object from pool.
 func (class *ObjectPool) Get() any {
-	class.Lock()
-	defer class.Unlock()
+	class.RLock()
+	defer class.RUnlock()
 
 	obj := class.freeObjs.Dequeue()
 	class.usedObjs[obj] = struct{}{}
@@ -56,10 +56,10 @@ func (class *ObjectPool) Bind(obj any, val struct{}) {
 	class.usedObjs[obj] = val
 }
 
-// Free all objects
+// Range all objects
 func (class *ObjectPool) Range(f func(any)) {
-	class.Lock()
-	defer class.Unlock()
+	class.RLock()
+	defer class.RUnlock()
 
 	for k := range class.usedObjs {
 		f(k)
@@ -68,8 +68,8 @@ func (class *ObjectPool) Range(f func(any)) {
 }
 
 func (class *ObjectPool) UsedRange(f func(any)) {
-	class.Lock()
-	defer class.Unlock()
+	class.RLock()
+	defer class.RUnlock()
 
 	for k := range class.usedObjs {
 		f(k)
@@ -78,14 +78,14 @@ func (class *ObjectPool) UsedRange(f func(any)) {
 
 // UsedCount Return the count of current used.
 func (class *ObjectPool) UsedCount() int {
-	class.Lock()
-	defer class.Unlock()
+	class.RLock()
+	defer class.RUnlock()
 	return len(class.usedObjs)
 }
 
 // FreeCount Return the count of current free.
 func (class *ObjectPool) FreeCount() int {
-	class.Lock()
-	defer class.Unlock()
+	class.RLock()
+	defer class.RUnlock()
 	return class.freeObjs.Count()
 }
