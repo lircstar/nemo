@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 type UDPClient struct {

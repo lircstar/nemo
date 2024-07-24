@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 type ConnPool struct {

@@ -4,14 +4,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/lircstar/nemo/nemo/conf"
 	"google.golang.org/protobuf/proto"
 	"math"
+	"nemo/nemo/conf"
 	"reflect"
 
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/util"
+	"nemo/nemo/network"
+	"nemo/sys/log"
+	"nemo/sys/util"
 )
 
 // -------------------------
@@ -36,7 +36,7 @@ type MsgRaw struct {
 
 func NewProcessor() *Processor {
 	p := new(Processor)
-	p.littleEndian = conf.LittleEndian
+	p.littleEndian = conf.GetSYS().LittleEndian
 	p.msgInfo = make(map[uint16]*MsgInfo)
 	p.msgID = make(map[reflect.Type]uint16)
 	return p

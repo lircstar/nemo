@@ -3,7 +3,7 @@ package network
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 	"net"
 	"sync/atomic"
 )

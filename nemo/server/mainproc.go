@@ -1,15 +1,15 @@
 package server
 
 import (
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/nemo/network"
+	"nemo/nemo/conf"
+	"nemo/nemo/network"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"strconv"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 var server Server = nil
@@ -60,8 +60,9 @@ func loopAgentPool() {
 		if agent != nil {
 			conn := agent.GetConn()
 			if conn != nil && !conn.IsClosed() {
-				if conf.TcpTimeout > 0 &&
-					time.Now().Unix()-agent.GetIdleTime() > int64(conf.TcpTimeout) {
+				timeout := conf.GetTCP().TimeOut
+				if timeout > 0 &&
+					time.Now().Unix()-agent.GetIdleTime() > int64(timeout) {
 					agent.Close()
 				}
 			}
@@ -75,8 +76,9 @@ func loopUdpAgentPool() {
 			agent := i.(*UdpAgent)
 			if agent != nil {
 				if agent.conn != nil && !agent.conn.IsClosed() {
-					if conf.UdpTimeout > 0 &&
-						time.Now().Unix()-agent.idleTime > int64(conf.UdpTimeout) {
+					timeout := conf.GetUDP().TimeOut
+					if timeout > 0 &&
+						time.Now().Unix()-agent.idleTime > int64(timeout) {
 						agent.Close()
 					}
 				}
@@ -89,10 +91,11 @@ func loopUdpAgentPool() {
 // nemo init utility.
 
 func logInit() {
-	if conf.LogLevel != "" {
-		log.SetLevel(conf.LogLevel)
+	config := conf.GetSYS()
+	if config.LogLevel != "" {
+		log.SetLevel(config.LogLevel)
 	}
-	if conf.LogFile {
+	if config.LogFile {
 		log.LogFile()
 	}
 }
@@ -102,7 +105,8 @@ func logClose() {
 }
 
 func monitor() {
-	monitor, err := strconv.ParseInt(conf.Monitor, 2, 32)
+	config := conf.GetSYS()
+	monitor, err := strconv.ParseInt(config.Monitor, 2, 32)
 	if err != nil {
 		log.Warnf("Failed to monitor; %v", err)
 	} else {
@@ -176,7 +180,7 @@ func Start() {
 
 	server.Start()
 
-	log.Infof("Nemo %v starting up.", conf.Version)
+	log.Infof("Nemo %v starting up.", conf.GetSYS().Version)
 	log.Infof("Listen Address: %v", server.GetAddr())
 
 	// close

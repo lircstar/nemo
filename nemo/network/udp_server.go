@@ -1,9 +1,9 @@
 package network
 
 import (
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/pool"
-	"github.com/lircstar/nemo/sys/util"
+	"nemo/sys/log"
+	"nemo/sys/pool"
+	"nemo/sys/util"
 	"net"
 	"sync"
 	"time"

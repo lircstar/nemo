@@ -1,13 +1,13 @@
 package network
 
 import (
-	"github.com/lircstar/nemo/sys/util"
+	"nemo/sys/util"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 type TCPClients struct {

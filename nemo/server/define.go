@@ -1,7 +1,8 @@
 package server
 
 import (
-	"github.com/lircstar/nemo/nemo/network"
+	"nemo/nemo/conf"
+	"nemo/nemo/network"
 )
 
 // -------------------------------------------------------------------------------------
@@ -32,6 +33,8 @@ type Event struct {
 	msg      any
 	userData any
 }
+
+var LittleEndian = conf.GetSYS().LittleEndian
 
 var processor network.Processor
 

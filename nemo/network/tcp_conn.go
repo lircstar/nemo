@@ -1,7 +1,7 @@
 package network
 
 import (
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 	"net"
 	"sync/atomic"
 )

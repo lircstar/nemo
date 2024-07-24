@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 func Post(url string, obj any, retObj any) bool {

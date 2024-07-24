@@ -2,10 +2,10 @@ package server
 
 import (
 	"encoding/binary"
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/pool"
+	"nemo/nemo/conf"
+	"nemo/nemo/network"
+	"nemo/sys/log"
+	"nemo/sys/pool"
 	"net"
 	"reflect"
 	"time"
@@ -53,7 +53,7 @@ func (a *Agent) Run(data []byte) {
 				break
 			}
 			// main loop
-			if conf.RoutineSafe {
+			if conf.GetTCP().RoutineSafe {
 				eventChan <- &Event{a, msg, a.userData}
 			} else {
 				err = processor.Route(a, msg, a.userData)

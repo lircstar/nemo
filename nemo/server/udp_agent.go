@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/nemo/conf"
+	"nemo/sys/log"
 	"time"
 )
 
@@ -22,7 +22,7 @@ func (a *UdpAgent) Run(data []byte) {
 			return
 		}
 		// main loop
-		if conf.UdpRoutineSafe {
+		if conf.GetUDP().RoutineSafe {
 			eventChan <- &Event{a, msg, a.userData}
 		} else {
 			err = processor.Route(a, msg, a.userData)

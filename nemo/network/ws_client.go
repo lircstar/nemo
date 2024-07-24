@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
+	"nemo/sys/log"
 )
 
 type WSClient struct {

@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/pool"
+	"nemo/sys/log"
+	"nemo/sys/pool"
 )
 
 type TCPServer struct {

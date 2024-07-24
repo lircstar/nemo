@@ -2,17 +2,17 @@ package server
 
 import (
 	"fmt"
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/nemo/network/json"
-	protobuf "github.com/lircstar/nemo/nemo/network/proto"
 	"math"
+	"nemo/nemo/conf"
+	"nemo/nemo/network"
+	"nemo/nemo/network/json"
+	protobuf "nemo/nemo/network/proto"
 	"time"
 )
 
-//-------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
 // Connection manager to connect other server.
-//-------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------
 // Connect to a TCP server.
@@ -24,12 +24,13 @@ type TcpClientWrapper struct {
 // Connect Create a client and connect to a TCP server.
 func (client *TcpClientWrapper) Connect(addr string) network.Client {
 	client.Addr = addr
-	client.AutoReconnect = conf.Reconnect
+	config := conf.GetTCP()
+	client.AutoReconnect = config.Reconnect
 	client.ConnectInterval = 3 * time.Second
-	client.PendingWriteNum = conf.PendingWriteNum
-	client.LenMsgLen = conf.LenMsgLen
+	client.PendingWriteNum = config.PendingWriteNum
+	client.LenMsgLen = config.LenMsgLen
 	client.MaxMsgLen = math.MaxInt32
-	client.LittleEndian = conf.LittleEndian
+	client.LittleEndian = LittleEndian
 	client.NewAgent = newClientAgent
 	// If have no processor create by server, create it by itself.
 	if processor == nil {
@@ -56,11 +57,12 @@ type WsClientWrapper struct {
 
 func (client *WsClientWrapper) Connect(addr string) network.Client {
 	client.Addr = addr
-	client.AutoReconnect = conf.Reconnect
+	config := conf.GetWSS()
+	client.AutoReconnect = config.Reconnect
 	client.ConnectInterval = 3 * time.Second
-	client.PendingWriteNum = conf.PendingWriteNum
+	client.PendingWriteNum = config.PendingWriteNum
 	client.MaxMsgLen = math.MaxInt32
-	client.LittleEndian = conf.LittleEndian
+	client.LittleEndian = LittleEndian
 	client.NewAgent = newClientAgent
 	// If have no processor create by server, create it by itself.
 	processor = json.NewProcessor()
@@ -77,12 +79,13 @@ type UdpClientWrapper struct {
 
 func (client *UdpClientWrapper) Connect(addr string) {
 	client.Addr = addr
-	client.TimeOut = conf.UdpTimeout
-	client.MinMsgLen = conf.UdpMinMsgLen
-	client.MaxMsgLen = conf.UdpMaxMsgLen
-	client.LittleEndian = conf.LittleEndian
-	client.AutoReconnect = conf.UdpReconnect
-	client.ConnectInterval = conf.UdpConnectInterval
+	config := conf.GetUDP()
+	client.TimeOut = config.TimeOut
+	client.MinMsgLen = config.MinMsgLen
+	client.MaxMsgLen = config.MaxMsgLen
+	client.LittleEndian = LittleEndian
+	client.AutoReconnect = config.Reconnect
+	client.ConnectInterval = config.ConnectInterval
 	client.NewAgent = newUdpClientAgent
 	// If have no processor create by server, create it by itself.
 	if processor == nil {

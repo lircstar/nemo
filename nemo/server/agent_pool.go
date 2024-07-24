@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/sys/pool"
+	"nemo/nemo/network"
+	"nemo/sys/pool"
 	"time"
 )
 

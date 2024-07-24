@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/pool"
+	"nemo/nemo/conf"
+	"nemo/sys/log"
+	"nemo/sys/pool"
 )
 
 type WSServer struct {
@@ -95,8 +95,9 @@ func (handler *WSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *WSServer) Start() {
+	config := conf.GetWSS()
 	if server.Addr == "" {
-		server.Addr = conf.WSAddr
+		server.Addr = config.Addr
 	}
 
 	ln, err := net.Listen("tcp", server.Addr)
@@ -108,7 +109,7 @@ func (server *WSServer) Start() {
 		server.MaxConnNum = 100
 		log.Warnf("invalid MaxConnNum, reset to %v", server.MaxConnNum)
 	}
-	server.PendingWriteNum = conf.PendingWriteNum
+	server.PendingWriteNum = config.PendingWriteNum
 	if server.PendingWriteNum <= 0 {
 		server.PendingWriteNum = 100
 		log.Warnf("invalid PendingWriteNum, reset to %v", server.PendingWriteNum)
@@ -118,7 +119,7 @@ func (server *WSServer) Start() {
 		server.MaxMsgLen = 4096
 		log.Warnf("invalid MaxMsgLen, reset to %v", server.MaxMsgLen)
 	}
-	server.HTTPTimeout = conf.HTTPTimeout
+	server.HTTPTimeout = config.HTTPTimeout
 	if server.HTTPTimeout <= 0 {
 		server.HTTPTimeout = 10 * time.Second
 		log.Warnf("invalid HTTPTimeout, reset to %v", server.HTTPTimeout)
@@ -128,17 +129,17 @@ func (server *WSServer) Start() {
 	}
 
 	if server.CertFile != "" || server.KeyFile != "" {
-		config := &tls.Config{}
-		config.NextProtos = []string{"http/1.1"}
+		cf := &tls.Config{}
+		cf.NextProtos = []string{"http/1.1"}
 
 		var err error
-		config.Certificates = make([]tls.Certificate, 1)
-		config.Certificates[0], err = tls.LoadX509KeyPair(server.CertFile, server.KeyFile)
+		cf.Certificates = make([]tls.Certificate, 1)
+		cf.Certificates[0], err = tls.LoadX509KeyPair(server.CertFile, server.KeyFile)
 		if err != nil {
 			log.Fatal("%v", err)
 		}
 
-		ln = tls.NewListener(ln, config)
+		ln = tls.NewListener(ln, cf)
 	}
 
 	server.ln = ln

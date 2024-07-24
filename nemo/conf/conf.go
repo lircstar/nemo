@@ -6,65 +6,91 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/util"
+	"nemo/sys/log"
+	"nemo/sys/util"
 )
 
-var (
-	Version = "1.0.0"
+type SYS struct {
+	Version string `json:"version"`
 
-	// system
-	LenStackBuf        = 4096
-	Monitor     string = "0" // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
+	LittleEndian bool   `json:"little_endian"`
+	LenStackBuf  int    `json:"len_stack_buf"`
+	Monitor      string `json:"monitor"` // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
 
 	// log
+	LogLevel string `json:"log_level"` // "debug" "info" "warn" "error" "fatal"
+	LogFile  bool   `json:"log_file"`
+}
 
-	LogLevel string = "debug" // "debug" "info" "warn" "error" "fatal"
-	LogFile  bool   = false
-	//LogFlag int
+type TCP struct {
+	Addr            string `json:"addr"`
+	InnerAddr       string `json:"inner_addr"`
+	MaxConnNum      int    `json:"max_conn_num"`
+	LenMsgLen       int    `json:"len_msg_len"`
+	MinMsgLen       int    `json:"min_msg_len"`
+	MaxMsgLen       int    `json:"max_msg_len"`
+	TimeOut         int    `json:"time_out"`
+	RoutineSafe     bool   `json:"routine_safe"`
+	PendingWriteNum int    `json:"pending_write_num"`
 
-	RoutineSafe = true // message is routine safe.
+	// Client
+	Reconnect       bool          `json:"reconnect"`
+	ConnectInterval time.Duration `json:"connect_interval"`
+}
 
-	// tcpserver
-	TCPAddr   string = "127.0.0.1:6000"
-	TCPInAddr string
+type UDP struct {
+	Addr        string `json:"addr"`
+	MaxConnNum  int    `json:"max_conn_num"`
+	LenMsgLen   int    `json:"len_msg_len"`
+	MaxMsgLen   int    `json:"max_msg_len"`
+	MinMsgLen   int    `json:"min_msg_len"`
+	TimeOut     int    `json:"time_out"`
+	RoutineSafe bool   `json:"routine_safe"`
 
-	LittleEndian    bool          = true
-	LenMsgLen       int           = 2
-	TcpMinMsgLen    int           = 1
-	TcpMaxMsgLen    int           = 4096
-	TcpMaxConnNum   int           = 65536
-	TcpTimeout      int           = 20 // socket read timeout seconds.
-	ConnectInterval time.Duration = 3 * time.Second
+	// Client
+	Reconnect       bool
+	ConnectInterval time.Duration `json:"connect_interval"`
+}
 
-	// tcpclient
-	Reconnect bool = true
+type WSS struct {
+	Addr            string        `json:"addr"`
+	CertFile        string        `json:"cert_file"`
+	KeyFile         string        `json:"key_file"`
+	MaxConnNum      int           `json:"max_conn_num"`
+	MaxMsgLen       int           `json:"max_msg_len"`
+	HTTPTimeout     time.Duration `json:"http_timeout"`
+	PendingWriteNum int           `json:"pending_write_num"`
 
-	// udpserver
-	UDPAddr        string = "127.0.0.1:8000"
-	UdpMaxConnNum  int    = 65536
-	UdpTimeout     int    = 10 // socket timeout after UDPTimeout seconds.
-	UdpMinMsgLen   int    = 1
-	UdpMaxMsgLen   int    = 4096
-	UdpRoutineSafe        = true // message is routine safe.
+	// Client
+	Reconnect bool
+}
 
-	// udpclient
-	UdpReconnect       bool          = true
-	UdpConnectInterval time.Duration = 3 * time.Second
+type Config struct {
+	Sys SYS `json:"sys"`
+	Tcp TCP `json:"tcp"`
+	Udp UDP `json:"udp"`
+	Wss WSS `json:"wss"`
+}
 
-	//webserver
-	WSAddr      string        = "127.0.0.1:6000"
-	HTTPTimeout time.Duration = time.Second * 30
-	CertFile    string
-	KeyFile     string
+var conf Config
 
-	// cluster
-	ListenAddr      string
-	ConnAddrs       []string
-	PendingWriteNum int = 100
-)
+func GetSYS() *SYS {
+	return &conf.Sys
+}
 
-var CallBack func(k string, v map[string]any)
+func GetTCP() *TCP {
+	return &conf.Tcp
+}
+
+func GetUDP() *UDP {
+	return &conf.Udp
+}
+
+func GetWSS() *WSS {
+	return &conf.Wss
+}
+
+//var CallBack func(k string, v map[string]any)
 
 func init() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -77,110 +103,46 @@ func init() {
 		log.Fatalf("%v", err)
 	}
 
-	var jsMap map[string]any
-	err = json.Unmarshal(data, &jsMap)
+	// Setting default value
+	conf.Sys.Version = "1.0.0"
+	conf.Sys.LenStackBuf = 4096
+	conf.Sys.Monitor = "0"      // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
+	conf.Sys.LogLevel = "debug" // "debug" "info" "warn" "error" "fatal"
+	conf.Sys.LogFile = false
+	conf.Sys.LittleEndian = true
+
+	conf.Tcp.Addr = "127.0.0.1:6000"
+	conf.Tcp.LenMsgLen = 2
+	conf.Tcp.MinMsgLen = 1
+	conf.Tcp.MaxMsgLen = 4096
+	conf.Tcp.MaxConnNum = 65535
+	conf.Tcp.TimeOut = 20
+	conf.Tcp.RoutineSafe = true
+	conf.Tcp.PendingWriteNum = 100
+
+	conf.Tcp.Reconnect = false
+	conf.Tcp.ConnectInterval = 3 * time.Second
+
+	conf.Udp.Addr = "127.0.0.1:7000"
+	conf.Udp.MaxConnNum = 65535
+	conf.Udp.MinMsgLen = 1
+	conf.Udp.MaxMsgLen = 4096
+	conf.Udp.TimeOut = 10
+	conf.Udp.RoutineSafe = true
+
+	conf.Udp.Reconnect = false
+	conf.Udp.ConnectInterval = 3 * time.Second
+
+	conf.Wss.Addr = "127.0.0.1:6000"
+	conf.Wss.MaxConnNum = 65535
+	conf.Wss.MaxMsgLen = 4096
+	conf.Wss.PendingWriteNum = 100
+	conf.Wss.HTTPTimeout = 30 * time.Second
+
+	conf.Wss.Reconnect = false
+
+	err = json.Unmarshal(data, &conf)
 	if err != nil {
 		log.Fatalf("%v", err)
-	}
-
-	for k, v := range jsMap {
-
-		if k == "Version" {
-			Version = v.(string)
-		}
-
-		if k == "sys" {
-			sys := v.(map[string]any)
-			for k1, v1 := range sys {
-				if k1 == "monitor" {
-					Monitor = v1.(string)
-				} else if k1 == "log_level" {
-					LogLevel = v1.(string)
-				} else if k1 == "log_file" {
-					LogFile = v1.(bool)
-				} else {
-					log.Warnf("sys define invalidate json key : %v", k1)
-				}
-			}
-		}
-
-		if k == "tcp" {
-			tcp := v.(map[string]any)
-			for k1, v1 := range tcp {
-				if k1 == "addr" {
-					TCPAddr = v1.(string)
-				} else if k1 == "inner_addr" {
-					TCPInAddr = v1.(string)
-				} else if k1 == "max_conn_num" {
-					TcpMaxConnNum = int(v1.(float64))
-				} else if k1 == "max_msg_len" {
-					TcpMaxMsgLen = int(v1.(float64))
-				} else if k1 == "time_out" {
-					TcpTimeout = int(v1.(float64))
-				} else if k1 == "little_endian" {
-					LittleEndian = v1.(bool)
-				} else if k1 == "reconnect" {
-					Reconnect = v1.(bool)
-				} else if k1 == "connectinterval" {
-					ConnectInterval = time.Duration(v1.(float64)) * time.Second
-				} else if k1 == "routine_safe" {
-					RoutineSafe = v1.(bool)
-				} else {
-					log.Warnf("tcp define invalidate json key : %v", k1)
-				}
-			}
-		}
-
-		if k == "udp" {
-			udp := v.(map[string]any)
-			for k1, v1 := range udp {
-				if k1 == "addr" {
-					UDPAddr = v1.(string)
-				} else if k1 == "time_out" {
-					UdpTimeout = int(v1.(float64))
-				} else if k1 == "max_msg_len" {
-					UdpMaxMsgLen = int(v1.(float64))
-				} else if k1 == "reconnect" {
-					UdpReconnect = v1.(bool)
-				} else if k1 == "little_endian" {
-					LittleEndian = v1.(bool)
-				} else if k1 == "connect_interval" {
-					UdpConnectInterval = time.Duration(v1.(float64)) * time.Second
-				} else if k1 == "udp_max_conn" {
-					UdpMaxConnNum = int(v1.(float64))
-				} else if k1 == "routine_safe" {
-					UdpRoutineSafe = v1.(bool)
-				} else {
-					log.Warnf("udp define invalidate json key : %v", k1)
-				}
-			}
-		}
-
-		if k == "wss" {
-			udp := v.(map[string]any)
-			for k1, v1 := range udp {
-				if k1 == "addr" {
-					WSAddr = v1.(string)
-				} else if k1 == "little_endian" {
-					LittleEndian = v1.(bool)
-				} else if k1 == "cert_file" {
-					CertFile = v1.(string)
-				} else if k1 == "key_file" {
-					KeyFile = v1.(string)
-				} else if k1 == "reconnect" {
-					Reconnect = v1.(bool)
-				} else if k1 == "connectinterval" {
-					ConnectInterval = time.Duration(v1.(float64)) * time.Second
-				} else if k1 == "timeout" {
-					HTTPTimeout = time.Second * time.Duration(int(v1.(float64)))
-				} else {
-					log.Warnf("web define invalidate json key : %v", k1)
-				}
-			}
-		}
-
-		if CallBack != nil {
-			CallBack(k, v.(map[string]any))
-		}
 	}
 }

@@ -1,12 +1,12 @@
 package server
 
 import (
-	"github.com/lircstar/nemo/nemo/conf"
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/nemo/network/json"
-	protobuf "github.com/lircstar/nemo/nemo/network/proto"
-	"github.com/lircstar/nemo/sys/log"
-	"github.com/lircstar/nemo/sys/pool"
+	"nemo/nemo/conf"
+	"nemo/nemo/network"
+	"nemo/nemo/network/json"
+	protobuf "nemo/nemo/network/proto"
+	"nemo/sys/log"
+	"nemo/sys/pool"
 )
 
 // -------------------------------------------------------------------------------------
@@ -26,20 +26,21 @@ func (tcp *TcpServerWrapper) GetType() uint {
 
 func (tcp *TcpServerWrapper) Start() {
 
-	if len(conf.TCPAddr) == 0 {
+	config := conf.GetTCP()
+	if len(config.Addr) == 0 {
 		log.Error("ip adrress of server cannot be zero.")
 		return
 	}
 
 	tcp.server = new(network.TCPServer)
-	tcp.server.Addr = conf.TCPAddr
-	tcp.server.MaxConnNum = conf.TcpMaxConnNum
-	tcp.server.MaxConnNum = conf.TcpMinMsgLen
-	tcp.server.MaxMsgLen = conf.TcpMaxMsgLen
+	tcp.server.Addr = config.Addr
+	tcp.server.MaxConnNum = config.MaxConnNum
+	tcp.server.MaxConnNum = config.MinMsgLen
+	tcp.server.MaxMsgLen = config.MaxMsgLen
 	tcp.server.PendingWriteNum = 100
 	tcp.server.NewAgent = newAgent
-	tcp.server.LenMsgLen = conf.LenMsgLen
-	tcp.server.LittleEndian = conf.LittleEndian
+	tcp.server.LenMsgLen = config.LenMsgLen
+	tcp.server.LittleEndian = LittleEndian
 
 	if processor == nil {
 		processor = protobuf.NewProcessor()
@@ -77,20 +78,21 @@ func (ws *WsServerWrapper) GetAddr() string {
 }
 
 func (ws *WsServerWrapper) Start() {
-	if len(conf.WSAddr) == 0 {
+	config := conf.GetWSS()
+	if len(config.Addr) == 0 {
 		log.Error("adrress of server cannot be zero.")
 		return
 	}
 
 	ws.server = new(network.WSServer)
-	ws.server.Addr = conf.WSAddr
-	ws.server.MaxConnNum = conf.TcpMaxConnNum
-	ws.server.MaxMsgLen = conf.TcpMaxMsgLen
-	ws.server.PendingWriteNum = conf.PendingWriteNum
-	ws.server.HTTPTimeout = conf.HTTPTimeout
-	ws.server.CertFile = conf.CertFile
-	ws.server.KeyFile = conf.KeyFile
-	ws.server.LittleEndian = conf.LittleEndian
+	ws.server.Addr = config.Addr
+	ws.server.MaxConnNum = config.MaxConnNum
+	ws.server.MaxMsgLen = config.MaxMsgLen
+	ws.server.PendingWriteNum = config.PendingWriteNum
+	ws.server.HTTPTimeout = config.HTTPTimeout
+	ws.server.CertFile = config.CertFile
+	ws.server.KeyFile = config.KeyFile
+	ws.server.LittleEndian = LittleEndian
 	ws.server.NewAgent = newAgent
 
 	processor = json.NewProcessor()
@@ -130,14 +132,15 @@ func (udp *UdpServerWrapper) GetPool() *pool.ObjectPool {
 }
 
 func (udp *UdpServerWrapper) Start() {
+	config := conf.GetUDP()
 	createUdpAgentPool()
 	udp.server = new(network.UDPServer)
-	udp.server.MaxConnNum = conf.UdpMaxConnNum
-	udp.server.MinMsgLen = conf.UdpMinMsgLen
-	udp.server.MaxMsgLen = conf.UdpMaxMsgLen
-	udp.server.LittleEndian = conf.LittleEndian
+	udp.server.MaxConnNum = config.MaxConnNum
+	udp.server.MinMsgLen = config.MinMsgLen
+	udp.server.MaxMsgLen = config.MaxMsgLen
+	udp.server.LittleEndian = LittleEndian
 	udp.server.NewAgent = newUdpAgent
-	udp.server.Start(conf.UDPAddr)
+	udp.server.Start(config.Addr)
 }
 
 func (udp *UdpServerWrapper) Stop() {

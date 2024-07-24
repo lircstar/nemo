@@ -1,7 +1,7 @@
 package pool
 
 import (
-	"github.com/lircstar/nemo/sys/utest"
+	"nemo/sys/utest"
 	"testing"
 )
 

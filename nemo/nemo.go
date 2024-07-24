@@ -1,8 +1,8 @@
 package nemo
 
 import (
-	"github.com/lircstar/nemo/nemo/network"
-	"github.com/lircstar/nemo/nemo/server"
+	"nemo/nemo/network"
+	"nemo/nemo/server"
 )
 
 //-------------------------------------------------------------------------------------
