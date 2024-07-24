@@ -42,11 +42,6 @@ func NewProcessor() *Processor {
 	return p
 }
 
-// GetByteOrder It's dangerous to call the method on routing or marshaling (unmarshaling)
-func (p *Processor) GetByteOrder() bool {
-	return p.littleEndian
-}
-
 // Register It's dangerous to call the method on routing or marshaling (unmarshaling)
 func (p *Processor) Register(msg any) {
 	msgType := reflect.TypeOf(msg)

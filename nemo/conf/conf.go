@@ -109,7 +109,7 @@ func init() {
 	conf.Sys.Monitor = "0"      // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
 	conf.Sys.LogLevel = "debug" // "debug" "info" "warn" "error" "fatal"
 	conf.Sys.LogFile = false
-	conf.Sys.LittleEndian = true
+	conf.Sys.LittleEndian = false
 
 	conf.Tcp.Addr = "127.0.0.1:6000"
 	conf.Tcp.LenMsgLen = 2

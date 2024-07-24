@@ -15,9 +15,6 @@ type Processor interface {
 	// Marshal must goroutine safe
 	Marshal(msg any) ([][]byte, error)
 
-	// GetByteOrder get current message buffer's bytes order.
-	GetByteOrder() bool
-
 	// Register register message into processor.
 	Register(msg any)
 

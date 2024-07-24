@@ -88,7 +88,7 @@ func (a *Agent) SendMessage(msg any) bool {
 func (a *Agent) SendRawMessage(id uint16, msg []byte) bool {
 
 	_id := make([]byte, 2)
-	if processor.GetByteOrder() {
+	if LittleEndian {
 		binary.LittleEndian.PutUint16(_id, id)
 	} else {
 		binary.BigEndian.PutUint16(_id, id)

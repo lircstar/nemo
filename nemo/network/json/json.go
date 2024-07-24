@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"nemo/nemo/conf"
 	"nemo/nemo/network"
 	"nemo/sys/log"
 	"nemo/sys/util"
@@ -174,10 +173,6 @@ func (p *Processor) Marshal(msg any) ([][]byte, error) {
 	data, err := json.Marshal(m)
 
 	return [][]byte{data}, err
-}
-
-func (p *Processor) GetByteOrder() bool {
-	return conf.GetSYS().LittleEndian
 }
 
 // Range goroutine safe
