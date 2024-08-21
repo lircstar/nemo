@@ -55,7 +55,12 @@ func (p *Processor) Register(msg any) {
 		log.Fatalf("too many protobuf messages (max = %v)", math.MaxUint16)
 	}
 
-	id := util.StringHash(fmt.Sprintf("%v", msgType))
+	name := msgType.Elem().Name()
+	if name == "" {
+		log.Fatalf("unnamed json message %v ", name)
+	}
+
+	id := util.StringHash(fmt.Sprintf("%v", name))
 	i := new(MsgInfo)
 	i.msgType = msgType
 	p.msgInfo[id] = i
