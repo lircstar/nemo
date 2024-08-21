@@ -1,15 +1,15 @@
 package server
 
 import (
-	"nemo/nemo/conf"
-	"nemo/nemo/network"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"strconv"
 	"time"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 var server Server = nil

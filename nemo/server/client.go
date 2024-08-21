@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/nemo/network/json"
+	protobuf "github.com/lircstar/nemo/nemo/network/proto"
 	"math"
-	"nemo/nemo/conf"
-	"nemo/nemo/network"
-	"nemo/nemo/network/json"
-	protobuf "nemo/nemo/network/proto"
 	"time"
 )
 

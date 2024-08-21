@@ -4,14 +4,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/lircstar/nemo/nemo/conf"
 	"google.golang.org/protobuf/proto"
 	"math"
-	"nemo/nemo/conf"
 	"reflect"
 
-	"nemo/nemo/network"
-	"nemo/sys/log"
-	"nemo/sys/util"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/util"
 )
 
 // -------------------------

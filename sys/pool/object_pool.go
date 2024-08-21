@@ -1,7 +1,7 @@
 package pool
 
 import (
-	col "nemo/sys/collections"
+	col "github.com/lircstar/nemo/sys/collections"
 	"sync"
 )
 

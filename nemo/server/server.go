@@ -1,12 +1,12 @@
 package server
 
 import (
-	"nemo/nemo/conf"
-	"nemo/nemo/network"
-	"nemo/nemo/network/json"
-	protobuf "nemo/nemo/network/proto"
-	"nemo/sys/log"
-	"nemo/sys/pool"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/nemo/network"
+	"github.com/lircstar/nemo/nemo/network/json"
+	protobuf "github.com/lircstar/nemo/nemo/network/proto"
+	"github.com/lircstar/nemo/sys/log"
+	"github.com/lircstar/nemo/sys/pool"
 )
 
 // -------------------------------------------------------------------------------------

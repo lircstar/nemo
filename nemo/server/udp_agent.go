@@ -1,8 +1,8 @@
 package server
 
 import (
-	"nemo/nemo/conf"
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/nemo/conf"
+	"github.com/lircstar/nemo/sys/log"
 	"time"
 )
 

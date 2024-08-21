@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"nemo/sys/log"
+	"github.com/lircstar/nemo/sys/log"
 )
 
 type TCPClient struct {
