@@ -77,7 +77,7 @@ type UdpClientWrapper struct {
 	network.UDPClient
 }
 
-func (client *UdpClientWrapper) Connect(addr string) {
+func (client *UdpClientWrapper) Connect(addr string) network.Client {
 	client.Addr = addr
 	config := conf.GetUDP()
 	client.TimeOut = config.TimeOut
@@ -93,6 +93,8 @@ func (client *UdpClientWrapper) Connect(addr string) {
 		processor = protobuf.NewProcessor()
 	}
 	client.Start()
+
+	return client
 }
 
 func newUdpClientAgent(conn network.Conn) network.Agent {

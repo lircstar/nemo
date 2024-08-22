@@ -27,17 +27,17 @@ func CreateUDPServer() server.Server {
 //-------------------------------------------------------------------------------------
 // Client
 
-func Connect(addr string, style uint) server.Client {
-	var client server.Client
+func Connect(addr string, style uint) network.Client {
+	var ret network.Client
 	if style == network.TYPE_CLIENT_TCP {
 		client := new(server.TcpClientWrapper)
-		client.Connect(addr)
+		ret = client.Connect(addr)
 	} else if style == network.TYPE_CLIENT_WEBSOCKET {
 		client := new(server.WsClientWrapper)
-		client.Connect(addr)
+		ret = client.Connect(addr)
 	} else if style == network.TYPE_CLIENT_UDP {
 		client := new(server.UdpClientWrapper)
-		client.Connect(addr)
+		ret = client.Connect(addr)
 	}
-	return client
+	return ret
 }

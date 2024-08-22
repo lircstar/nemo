@@ -32,6 +32,7 @@ type TCP struct {
 	TimeOut         int    `json:"time_out"`
 	RoutineSafe     bool   `json:"routine_safe"`
 	PendingWriteNum int    `json:"pending_write_num"`
+	ActiveBreakConn bool   `json:"active_break_conn"` // active break connection
 
 	// Client
 	Reconnect       bool          `json:"reconnect"`
@@ -119,6 +120,7 @@ func init() {
 	conf.Tcp.TimeOut = 20
 	conf.Tcp.RoutineSafe = true
 	conf.Tcp.PendingWriteNum = 100
+	conf.Tcp.ActiveBreakConn = true
 
 	conf.Tcp.Reconnect = false
 	conf.Tcp.ConnectInterval = 3 * time.Second

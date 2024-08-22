@@ -21,13 +21,6 @@ type Server interface {
 	Stop()
 }
 
-type Client interface {
-	GetType() int
-
-	Connect(addr string) *network.TCPClient
-	Close()
-}
-
 type Event struct {
 	agent    network.Agent
 	msg      any

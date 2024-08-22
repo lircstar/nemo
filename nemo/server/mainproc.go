@@ -35,7 +35,7 @@ func mainProc() {
 		case <-time.After(time.Millisecond * 30):
 			onLoopCallback()
 		case <-t1.C:
-			if server.GetType() == TYPE_SERVER_TCP {
+			if server.GetType() == TYPE_SERVER_TCP || conf.GetTCP().ActiveBreakConn {
 				loopAgentPool()
 				loopUdpAgentPool()
 			}
