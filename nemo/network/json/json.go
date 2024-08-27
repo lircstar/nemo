@@ -176,12 +176,12 @@ func (p *Processor) Marshal(msg any) ([][]byte, error) {
 }
 
 // Range goroutine safe
-func (p *Processor) Range(f func(id uint16, t reflect.Type)) {
+func (p *Processor) Range(f func(id uint16, name string)) {
 	for id, i := range p.msgInfo {
-		f(uint16(id), i.msgType)
+		f(id, i.msgType.Elem().Name())
 	}
 }
 
-func (p *Processor) GetMsgId(msgType reflect.Type) uint16 {
-	return p.msgID[msgType]
+func (p *Processor) GetMsgId(msg any) uint16 {
+	return p.msgID[msg.(reflect.Type)]
 }

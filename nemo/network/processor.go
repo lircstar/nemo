@@ -1,9 +1,5 @@
 package network
 
-import (
-	"reflect"
-)
-
 type MsgHandler func(Agent, []any)
 
 type Processor interface {
@@ -25,8 +21,8 @@ type Processor interface {
 	SetRawHandler(id uint16, msgRawHandler MsgHandler)
 
 	// Range show all registered message.
-	Range(f func(id uint16, t reflect.Type))
+	Range(f func(id uint16, name string))
 
 	// GetMsgId get current message id by type.
-	GetMsgId(msgType reflect.Type) uint16
+	GetMsgId(msgType any) uint16
 }

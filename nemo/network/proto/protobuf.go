@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lircstar/nemo/nemo/conf"
-	"google.golang.org/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 	"math"
 	"reflect"
 
@@ -167,12 +167,12 @@ func (p *Processor) Marshal(msg any) ([][]byte, error) {
 }
 
 // Range goroutine safe
-func (p *Processor) Range(f func(id uint16, t reflect.Type)) {
+func (p *Processor) Range(f func(id uint16, name string)) {
 	for id, i := range p.msgInfo {
-		f(id, i.msgType)
+		f(id, i.msgType.Elem().Name())
 	}
 }
 
-func (p *Processor) GetMsgId(msgtype reflect.Type) uint16 {
-	return p.msgID[msgtype]
+func (p *Processor) GetMsgId(msg any) uint16 {
+	return p.msgID[msg.(reflect.Type)]
 }
