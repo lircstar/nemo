@@ -29,6 +29,15 @@ func (a *Agent) SetType(style uint) {
 	a.style = style
 }
 
+func (a *Agent) IsLive() bool {
+	if int(time.Now().Unix()-a.idleTime) > conf.GetTCP().TimeOut {
+		return false
+	} else if a.conn == nil || !a.conn.IsClosed() {
+		return false
+	}
+	return true
+}
+
 func (a *Agent) GetConn() network.Conn {
 	return a.conn
 }
