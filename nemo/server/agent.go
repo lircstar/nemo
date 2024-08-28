@@ -16,6 +16,7 @@ type Agent struct {
 	conn     network.Conn
 	id       uint64
 	idleTime int64
+	active   bool
 	pool     *pool.ObjectPool
 	//outFlag  bool // it is a flag of connection connect to other server.
 	userData any
@@ -29,13 +30,17 @@ func (a *Agent) SetType(style uint) {
 	a.style = style
 }
 
-func (a *Agent) IsLive() bool {
-	if int(time.Now().Unix()-a.idleTime) > conf.GetTCP().TimeOut {
-		return false
-	} else if a.conn == nil || !a.conn.IsClosed() {
-		return false
-	}
-	return true
+//func (a *Agent) IsLive() bool {
+//	if int(time.Now().Unix()-a.idleTime) > conf.GetTCP().TimeOut {
+//		return false
+//	} else if a.conn == nil || !a.conn.IsClosed() {
+//		return false
+//	}
+//	return true
+//}
+
+func (a *Agent) IsActive() bool {
+	return a.active
 }
 
 func (a *Agent) GetConn() network.Conn {

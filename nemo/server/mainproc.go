@@ -35,7 +35,7 @@ func mainProc() {
 		case <-time.After(time.Millisecond * 30):
 			onLoopCallback()
 		case <-t1.C:
-			if server.GetType() == TYPE_SERVER_TCP || conf.GetTCP().ActiveBreakConn {
+			if server.GetType() == TYPE_SERVER_TCP {
 				loopAgentPool()
 				loopUdpAgentPool()
 			}
@@ -61,7 +61,7 @@ func loopAgentPool() {
 			conn := agent.GetConn()
 			if conn != nil && !conn.IsClosed() {
 				timeout := conf.GetTCP().TimeOut
-				if timeout > 0 &&
+				if timeout > 0 && !agent.IsActive() &&
 					time.Now().Unix()-agent.GetIdleTime() > int64(timeout) {
 					agent.Close()
 				}

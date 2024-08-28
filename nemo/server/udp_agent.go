@@ -38,14 +38,14 @@ func (a *UdpAgent) Run(data []byte) {
 
 }
 
-func (a *UdpAgent) IsLive() bool {
-	if int(time.Now().Unix()-a.idleTime) > conf.GetUDP().TimeOut {
-		return false
-	} else if a.conn == nil || !a.conn.IsClosed() {
-		return false
-	}
-	return true
-}
+//func (a *UdpAgent) IsLive() bool {
+//	if int(time.Now().Unix()-a.idleTime) > conf.GetUDP().TimeOut {
+//		return false
+//	} else if a.conn == nil || !a.conn.IsClosed() {
+//		return false
+//	}
+//	return true
+//}
 
 func (a *UdpAgent) OnClose() {
 	if onCloseCallback != nil {

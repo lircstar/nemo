@@ -44,6 +44,7 @@ func (client *TcpClientWrapper) Connect(addr string) network.Client {
 func newClientAgent(conn network.Conn) network.Agent {
 	a := new(Agent)
 	a.conn = conn
+	a.active = true
 	a.idleTime = time.Now().Unix()
 	return a
 }

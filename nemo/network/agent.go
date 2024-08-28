@@ -12,7 +12,7 @@ type Agent interface {
 	GetType() uint
 	SetType(style uint)
 
-	IsLive() bool
+	IsActive() bool
 
 	GetConn() Conn
 	GetIdleTime() int64
