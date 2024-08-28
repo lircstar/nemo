@@ -35,7 +35,7 @@ func (tcp *TcpServerWrapper) Start() {
 	tcp.server = new(network.TCPServer)
 	tcp.server.Addr = config.Addr
 	tcp.server.MaxConnNum = config.MaxConnNum
-	tcp.server.MaxConnNum = config.MinMsgLen
+	tcp.server.MinMsgLen = config.MinMsgLen
 	tcp.server.MaxMsgLen = config.MaxMsgLen
 	tcp.server.PendingWriteNum = 100
 	tcp.server.NewAgent = newAgent
