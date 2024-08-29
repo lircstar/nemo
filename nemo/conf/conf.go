@@ -20,6 +20,7 @@ type SYS struct {
 	// log
 	LogLevel string `json:"log_level"` // "debug" "info" "warn" "error" "fatal"
 	LogFile  bool   `json:"log_file"`
+	LogFlags string `json:"log_flags"`
 }
 
 type TCP struct {

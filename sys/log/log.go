@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -334,10 +335,37 @@ func (log *Logger) Level() Level {
 
 func (log *Logger) SetPanicLevelByString(level string) {
 	log.panicLevel = str2loglevel(level)
-
 }
 
-// 注意, 加色只能在Gogland的main方式启用, Test方式无法加色
+func str2logflag(f string) int {
+	flag := LstdFlags
+	flags := strings.Split(f, "|")
+	for _, s := range flags {
+		v := strings.ToLower(strings.Trim(s, " "))
+		switch v {
+		case "longfile":
+			flag |= Llongfile
+			break
+		case "shortfile":
+			flag |= Lshortfile
+			break
+		case "longtime":
+			flag |= Lmicroseconds
+			break
+		}
+	}
+	return flag
+}
+
+func (log *Logger) SetFlags(flag int) {
+	log.flag = flag
+}
+
+func (log *Logger) SetFlagsByString(f string) {
+	log.flag = str2logflag(f)
+}
+
+// SetColorFile 注意, 加色只能在Goland的main方式启用, Test方式无法加色
 func (log *Logger) SetColorFile(file *ColorFile) {
 	log.colorFile = file
 	log.colorFile.Load("color_sample.json")
@@ -376,6 +404,10 @@ func Export(logger *Logger) {
 
 func SetLevel(lv string) {
 	gLogger.SetLevelByString(lv)
+}
+
+func SetFlags(flag string) {
+	gLogger.SetFlagsByString(flag)
 }
 
 func LogFile() {
