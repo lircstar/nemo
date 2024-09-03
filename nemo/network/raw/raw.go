@@ -64,7 +64,7 @@ func (p *Processor) Route(agent network.Agent, msg any, userData any) error {
 	}
 
 	if msgInfo.msgHandler != nil {
-		msgInfo.msgHandler(agent, []any{rawMsg.Data, userData})
+		msgInfo.msgHandler(agent, []any{rawMsg.Data, rawMsg.Pack, userData})
 	}
 	return nil
 }
