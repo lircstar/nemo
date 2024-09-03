@@ -31,8 +31,8 @@ func (class *ObjectPool) Create(obj any) {
 
 // Get a free object from pool.
 func (class *ObjectPool) Get() any {
-	class.RLock()
-	defer class.RUnlock()
+	class.Lock()
+	defer class.Unlock()
 
 	obj := class.freeObjs.Dequeue()
 	class.usedObjs[obj] = struct{}{}
