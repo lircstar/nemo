@@ -22,6 +22,7 @@ type MsgInfo struct {
 }
 
 type Message struct {
+	Pack byte
 	Id   uint16
 	Data []byte
 }
@@ -70,16 +71,19 @@ func (p *Processor) Route(agent network.Agent, msg any, userData any) error {
 
 // Unmarshal goroutine safe
 func (p *Processor) Unmarshal(data []byte) (any, error) {
-	if len(data) < 2 {
-		return nil, errors.New("protobuf data too short")
+	if len(data) < 3 {
+		return nil, errors.New("raw data too short")
 	}
+
+	// pack type
+	pack := data[0]
 
 	// id
 	var id uint16
 	if p.littleEndian {
-		id = binary.LittleEndian.Uint16(data)
+		id = binary.LittleEndian.Uint16(data[1:])
 	} else {
-		id = binary.BigEndian.Uint16(data)
+		id = binary.BigEndian.Uint16(data[1:])
 	}
 
 	// msg
@@ -87,7 +91,7 @@ func (p *Processor) Unmarshal(data []byte) (any, error) {
 	if msgInfo == nil {
 		return nil, errors.New(fmt.Sprintf("message didn't define; %v", id))
 	}
-	return Message{id, data[2:]}, nil
+	return Message{Pack: pack, Id: id, Data: data[3:]}, nil
 }
 
 // Marshal goroutine safe
@@ -101,7 +105,11 @@ func (p *Processor) Marshal(msg any) ([][]byte, error) {
 		binary.BigEndian.PutUint16(id, msgInfo.Id)
 	}
 
-	return [][]byte{id, msgInfo.Data}, nil
+	return [][]byte{
+		{msgInfo.Pack},
+		id,
+		msgInfo.Data,
+	}, nil
 }
 
 // Range goroutine safe
