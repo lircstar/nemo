@@ -24,6 +24,10 @@ func CreateUDPServer() server.Server {
 	return udp
 }
 
+func Stop() {
+	server.Stop()
+}
+
 //-------------------------------------------------------------------------------------
 // Client
 
