@@ -194,7 +194,6 @@ func Start() {
 
 func Stop() {
 	exitProcChan <- 0
-	<-endProcChan
 }
 
 func destroy() {
