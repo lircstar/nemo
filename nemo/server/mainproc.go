@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/lircstar/nemo/sys/log"
@@ -156,12 +157,14 @@ func monitor() {
 }
 
 func closeSig() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-	sig := <-c
-	log.Infof("Nemo closing. (signal:%v)", sig)
 
-	exitProcChan <- 0
+	if conf.GetSYS().SigClose {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+		sig := <-c
+		log.Infof("Nemo closing. (signal:%v)", sig)
+		exitProcChan <- 0
+	}
 	<-endProcChan
 }
 
