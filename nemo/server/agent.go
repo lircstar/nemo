@@ -43,6 +43,10 @@ func (a *Agent) IsActive() bool {
 	return a.active
 }
 
+func (a *Agent) SetActive(active bool) {
+	a.active = active
+}
+
 func (a *Agent) GetConn() network.Conn {
 	return a.conn
 }
