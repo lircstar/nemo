@@ -109,7 +109,7 @@ func init() {
 	conf.Sys.Version = "1.0.0"
 	conf.Sys.LenStackBuf = 4096
 	conf.Sys.Monitor = "0"      // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
-	conf.Sys.SigClose = true    // close signal
+	conf.Sys.SigClose = false   // close signal
 	conf.Sys.LogLevel = "debug" // "debug" "info" "warn" "error" "fatal"
 	conf.Sys.LogFile = false
 	conf.Sys.LittleEndian = false
