@@ -116,8 +116,10 @@ func (client *TCPClient) Send(msg any) bool {
 
 func (client *TCPClient) Close() {
 	client.closeFlag = true
-	_ = client.conn.Close()
-	client.conn = nil
+	if client.conn != nil {
+		_ = client.conn.Close()
+		client.conn = nil
+	}
 }
 
 func (client *TCPClient) GetType() uint {

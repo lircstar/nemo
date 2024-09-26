@@ -120,8 +120,10 @@ func (client *WSClient) Send(msg any) bool {
 
 func (client *WSClient) Close() {
 	client.closeFlag = true
-	_ = client.conn.Close()
-	client.conn = nil
+	if client.conn != nil {
+		_ = client.conn.Close()
+		client.conn = nil
+	}
 }
 
 func (client *WSClient) GetType() uint {

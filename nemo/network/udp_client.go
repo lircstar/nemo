@@ -92,7 +92,10 @@ reconnect:
 
 func (client *UDPClient) Close() {
 	if client.agent != nil {
-		client.conn.Close()
+		if client.conn != nil {
+			client.conn.Close()
+			client.conn = nil
+		}
 		client.agent.Close()
 	}
 }
