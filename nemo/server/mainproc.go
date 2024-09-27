@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	StatusServerStarting = 1
-	StatusServerStarted  = 2
-	StatusServerStopping = 3
-	StatusServerStopped  = 4
+	StatusServerStarting = iota
+	StatusServerStarted
+	StatusServerStopping
+	StatusServerStopped
 )
 
 var server Server = nil
