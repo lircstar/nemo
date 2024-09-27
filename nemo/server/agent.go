@@ -60,7 +60,7 @@ func (a *Agent) Run(data []byte) {
 	for {
 		data, err := a.conn.ReadMsg()
 		if err != nil {
-			log.Debugf("read message: %v", err)
+			//log.Debugf("read message: %v", err)
 			break
 		}
 
