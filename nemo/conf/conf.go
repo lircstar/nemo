@@ -16,6 +16,7 @@ type SYS struct {
 	LittleEndian bool   `json:"little_endian"`
 	LenStackBuf  int    `json:"len_stack_buf"`
 	Monitor      string `json:"monitor"` // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
+	SigClose     bool   `json:"sig_close"`
 
 	// log
 	LogLevel string `json:"log_level"` // "debug" "info" "warn" "error" "fatal"
@@ -108,6 +109,7 @@ func init() {
 	conf.Sys.Version = "1.0.0"
 	conf.Sys.LenStackBuf = 4096
 	conf.Sys.Monitor = "0"      // for bit operation. "1111" first bit : cpu second bit : mem third bit : block last bit : goroutine
+	conf.Sys.SigClose = false   // close signal
 	conf.Sys.LogLevel = "debug" // "debug" "info" "warn" "error" "fatal"
 	conf.Sys.LogFile = false
 	conf.Sys.LittleEndian = false

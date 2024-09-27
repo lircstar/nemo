@@ -12,11 +12,20 @@ import (
 	"github.com/lircstar/nemo/sys/log"
 )
 
+const (
+	StatusServerStarting = 1
+	StatusServerStarted  = 2
+	StatusServerStopping = 3
+	StatusServerStopped  = 4
+)
+
 var server Server = nil
 
 var eventChan = make(chan *Event, 1024)
 var exitProcChan = make(chan int, 1)
 var endProcChan = make(chan int, 1)
+
+var serverStatus = StatusServerStopped
 
 func New(s Server) Server {
 	server = s
@@ -41,7 +50,9 @@ func mainProc() {
 			}
 			t1.Reset(time.Second * 10)
 		case <-exitProcChan:
+			serverStatus = StatusServerStopping
 			doFinish()
+			serverStatus = StatusServerStopped
 			return
 		}
 
@@ -156,12 +167,13 @@ func monitor() {
 }
 
 func closeSig() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-	sig := <-c
-	log.Infof("Nemo closing. (signal:%v)", sig)
-
-	exitProcChan <- 0
+	if conf.GetSYS().SigClose {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, os.Kill)
+		sig := <-c
+		log.Infof("Nemo closing. (signal:%v)", sig)
+		exitProcChan <- 0
+	}
 	<-endProcChan
 }
 
@@ -170,6 +182,8 @@ func closeSig() {
 
 func Start() {
 
+	serverStatus = StatusServerStarting
+
 	logInit()
 
 	monitor()
@@ -177,6 +191,8 @@ func Start() {
 	createAgentPool()
 
 	go mainProc()
+
+	serverStatus = StatusServerStarted
 
 	server.Start()
 
@@ -194,7 +210,6 @@ func Start() {
 
 func Stop() {
 	exitProcChan <- 0
-	<-endProcChan
 }
 
 func destroy() {
@@ -204,4 +219,8 @@ func destroy() {
 	}
 
 	server.Stop()
+}
+
+func GetStatus() int {
+	return serverStatus
 }
