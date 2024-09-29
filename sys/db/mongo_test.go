@@ -10,9 +10,8 @@ import (
 )
 
 func TestMongoDBOperations(t *testing.T) {
-
 	uri := "mongodb://localhost:27017"
-	client, err := NewMongoConnection(uri, "test")
+	client, err := NewMongoDB(uri, "test")
 	if err != nil {
 		t.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
@@ -22,7 +21,7 @@ func TestMongoDBOperations(t *testing.T) {
 		}
 	}()
 
-	users := client.NewCollection("users")
+	users := client.GetCollection("users")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -41,9 +40,13 @@ func TestMongoDBOperations(t *testing.T) {
 
 	// Find document
 	filter := bson.M{"name": "Alice"}
-	foundUsers, err := users.Find(ctx, filter)
+	cursor, err := users.Find(ctx, filter)
 	if err != nil {
 		t.Fatalf("Find error: %v", err)
+	}
+	foundUsers, err := client.DecodeCursor(ctx, cursor)
+	if err != nil {
+		t.Fatalf("DecodeCursor error: %v", err)
 	}
 	fmt.Printf("Found users: %v\n", foundUsers)
 
@@ -71,9 +74,13 @@ func TestMongoDBOperations(t *testing.T) {
 		{"$match": bson.M{"age": bson.M{"$gte": 18}}},
 		{"$group": bson.M{"_id": "$age", "count": bson.M{"$sum": 1}}},
 	}
-	aggResults, err := users.ExecutePipeline(ctx, pipeline)
+	cursor, err = users.Aggregate(ctx, pipeline)
 	if err != nil {
-		t.Fatalf("ExecutePipeline error: %v", err)
+		t.Fatalf("Aggregate error: %v", err)
+	}
+	aggResults, err := client.DecodeCursor(ctx, cursor)
+	if err != nil {
+		t.Fatalf("DecodeCursor error: %v", err)
 	}
 	fmt.Printf("Aggregation results: %v\n", aggResults)
 }

@@ -43,7 +43,9 @@ func mainProc() {
 				log.Debugf("route message error: %v", err)
 			}
 		case <-time.After(time.Millisecond * 30):
-			onLoopCallback()
+			if serverStatus == StatusServerStarted {
+				onLoopCallback()
+			}
 		case <-t1.C:
 			if server.GetType() == TYPE_SERVER_TCP {
 				loopAgentPool()
@@ -56,7 +58,6 @@ func mainProc() {
 			serverStatus = StatusServerStopped
 			return
 		}
-
 	}
 }
 
@@ -192,8 +193,6 @@ func Start() {
 	createAgentPool()
 
 	go mainProc()
-
-	serverStatus = StatusServerStarted
 
 	server.Start()
 
