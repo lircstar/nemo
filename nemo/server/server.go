@@ -52,6 +52,7 @@ func (tcp *TcpServerWrapper) Start() {
 
 	if onInitCallback != nil {
 		onInitCallback()
+		serverStatus = StatusServerStarted
 	}
 
 }
@@ -103,6 +104,7 @@ func (ws *WsServerWrapper) Start() {
 
 	if onInitCallback != nil {
 		onInitCallback()
+		serverStatus = StatusServerStarted
 	}
 }
 

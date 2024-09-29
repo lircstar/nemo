@@ -6,111 +6,94 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
-type MongoConnection struct {
+// MongoDB encapsulates the MongoDB client and database.
+type MongoDB struct {
 	client *mongo.Client
 	db     *mongo.Database
 }
 
-func NewMongoConnection(uri string, db string) (*MongoConnection, error) {
+// NewMongoDB creates a new MongoDB connection.
+func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
-	// 测试连接
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
+
+	// Check connection
+	if err := checkConnection(client); err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	return &MongoConnection{
+	return &MongoDB{
 		client: client,
-		db:     client.Database(db),
+		db:     client.Database(dbName),
 	}, nil
 }
-func (m *MongoConnection) GetClient() *mongo.Client {
-	return m.client
+
+func checkConnection(client *mongo.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for {
+		err := client.Ping(ctx, nil)
+		if err == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
 
-func (m *MongoConnection) GetDatabase() *mongo.Database {
+// GetDatabase returns the MongoDB database.
+func (m *MongoDB) GetDatabase() *mongo.Database {
 	return m.db
 }
 
-func (m *MongoConnection) GetCollection(name string) *mongo.Collection {
+// GetClient returns the MongoDB client.
+func (m *MongoDB) GetClient() *mongo.Client {
+	return m.client
+}
+
+// GetCollection returns a collection from the MongoDB database.
+func (m *MongoDB) GetCollection(name string) *mongo.Collection {
 	return m.db.Collection(name)
 }
 
-func (m *MongoConnection) Close() error {
+// Close closes the MongoDB connection.
+func (m *MongoDB) Close() error {
 	return m.client.Disconnect(context.TODO())
 }
 
-type Collection struct {
-	collection *mongo.Collection
-}
-
-// NewCollection 创建一个新的 Collection 实例
-func (m *MongoConnection) NewCollection(name string) *Collection {
-	return &Collection{
-		collection: m.db.Collection(name),
-	}
-}
-
-// InsertOne 插入一条文档
-func (c *Collection) InsertOne(ctx context.Context, document any) (*mongo.InsertOneResult, error) {
-	return c.collection.InsertOne(ctx, document)
-}
-
-// Find 查询文档
-func (c *Collection) Find(ctx context.Context, filter any) ([]bson.M, error) {
-	cur, err := c.collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-
+// DecodeCursor decodes a MongoDB cursor into a slice of bson.M.
+func (m *MongoDB) DecodeCursor(ctx context.Context, cursor *mongo.Cursor) ([]bson.M, error) {
+	defer cursor.Close(ctx)
 	var results []bson.M
-	for cur.Next(ctx) {
+	for cursor.Next(ctx) {
 		var result bson.M
-		if err := cur.Decode(&result); err != nil {
+		if err := cursor.Decode(&result); err != nil {
 			return nil, err
 		}
 		results = append(results, result)
 	}
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
 	return results, nil
 }
 
-// UpdateOne update a document
-func (c *Collection) UpdateOne(ctx context.Context, filter, update any) (*mongo.UpdateResult, error) {
-	return c.collection.UpdateOne(ctx, filter, update)
-}
-
-// DeleteOne delete a document
-func (c *Collection) DeleteOne(ctx context.Context, filter any) (*mongo.DeleteResult, error) {
-	return c.collection.DeleteOne(ctx, filter)
-}
-
-// ExecutePipeline execute an aggregation pipeline
-func (c *Collection) ExecutePipeline(ctx context.Context, pipeline any) ([]bson.M, error) {
-	cur, err := c.collection.Aggregate(ctx, pipeline)
+// DecodeSingleResult decodes a MongoDB single result into a bson.M.
+func (m *MongoDB) DecodeSingleResult(result *mongo.SingleResult) (bson.M, error) {
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+	data := bson.M{}
+	err := result.Decode(&data)
 	if err != nil {
 		return nil, err
 	}
-	defer cur.Close(ctx)
-
-	var results []bson.M
-	for cur.Next(ctx) {
-		var result bson.M
-		if err := cur.Decode(&result); err != nil {
-			return nil, err
-		}
-		results = append(results, result)
-	}
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
-	return results, nil
+	return data, nil
 }
