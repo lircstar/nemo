@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 // MongoDB encapsulates the MongoDB client and database.
@@ -21,16 +22,33 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 		return nil, err
 	}
 
-	// Test the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
+	// Check connection
+	if err := checkConnection(client); err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
 	return &MongoDB{
 		client: client,
 		db:     client.Database(dbName),
 	}, nil
+}
+
+func checkConnection(client *mongo.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for {
+		err := client.Ping(ctx, nil)
+		if err == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
 
 // GetDatabase returns the MongoDB database.
