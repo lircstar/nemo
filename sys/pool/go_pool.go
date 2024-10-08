@@ -16,7 +16,7 @@ type TaskRoutine struct {
 	task IRoutineTask
 }
 
-func NewTaskRoutine(pool *RoutinePool) *TaskRoutine {
+func newTaskRoutine(pool *RoutinePool) *TaskRoutine {
 	t := &TaskRoutine{pool: pool}
 	go t.Run()
 	return t
@@ -24,12 +24,12 @@ func NewTaskRoutine(pool *RoutinePool) *TaskRoutine {
 
 func (t *TaskRoutine) AttachTask(task IRoutineTask) {
 	t.task = task
-	t.pool.activeThreads <- t
+	t.pool.activeRoutines <- t
 }
 
 func (t *TaskRoutine) Run() {
 	for {
-		task := <-t.pool.activeThreads
+		task := <-t.pool.activeRoutines
 		task.task.Run()
 		t.pool.pushFinishedTask(task.task)
 		t.pool.writeThreadLog()
@@ -43,26 +43,26 @@ func (t *TaskRoutine) Run() {
 }
 
 type RoutinePool struct {
-	threadCount     int
+	routineCount    int
 	freeRoutines    chan *TaskRoutine
-	activeThreads   chan *TaskRoutine
+	activeRoutines  chan *TaskRoutine
 	pendingRoutines []IRoutineTask
 	finishedTasks   []IRoutineTask
 	printLog        bool
 	mu              sync.Mutex
 }
 
-func NewRoutinePool(threadCount int) *RoutinePool {
+func NewRoutinePool(routineCount int) *RoutinePool {
 	pool := &RoutinePool{
-		threadCount:     threadCount,
-		freeRoutines:    make(chan *TaskRoutine, threadCount),
-		activeThreads:   make(chan *TaskRoutine, threadCount),
+		routineCount:    routineCount,
+		freeRoutines:    make(chan *TaskRoutine, routineCount),
+		activeRoutines:  make(chan *TaskRoutine, routineCount),
 		pendingRoutines: make([]IRoutineTask, 0),
 		finishedTasks:   make([]IRoutineTask, 0),
 	}
 
-	for i := 0; i < threadCount; i++ {
-		thread := NewTaskRoutine(pool)
+	for i := 0; i < routineCount; i++ {
+		thread := newTaskRoutine(pool)
 		pool.freeRoutines <- thread
 	}
 
@@ -120,7 +120,7 @@ func (pool *RoutinePool) writeThreadLog() {
 			pool.mu.Lock()
 			pendingCount := len(pool.pendingRoutines)
 			finishedCount := len(pool.finishedTasks)
-			freeCount := pool.threadCount - len(pool.freeRoutines)
+			freeCount := pool.routineCount - len(pool.freeRoutines)
 			pool.mu.Unlock()
 
 			fmt.Printf("POOLID:%p, PendingTask:%d, FinishedTask:%d, FreeThread:%d\n", pool, pendingCount, finishedCount, freeCount)
@@ -166,7 +166,7 @@ func (pool *RoutinePool) Loop() {
 //	}
 //
 //	// Run the loop to process finished tasks
-//	go pool.Loop()
+//	pool.Loop()
 //
 //	// Wait for a while to let tasks complete
 //	time.Sleep(30 * time.Second)
