@@ -51,6 +51,8 @@ type DataBufferBox struct {
 
 	// Callback function to create a new DataBuffer
 	CreateBufferCallBack func() *DataBuffer
+	// Callback function to handle data
+	OnDataUpdateCallBack func(data *DataBuffer)
 }
 
 func NewDataBufferBox() *DataBufferBox {
@@ -63,12 +65,12 @@ func NewDataBufferBox() *DataBufferBox {
 }
 
 func (db *DataBufferBox) CreateData() *DataBuffer {
-	return db.NewBuffer()
+	return db.newBuffer()
 }
 
 func (db *DataBufferBox) DeleteData(data *DataBuffer) {
-	db.RemoveFromLiveList(data)
-	db.FreeBuffer(data)
+	db.removeFromLiveList(data)
+	db.freeBuffer(data)
 }
 
 func (db *DataBufferBox) LockData(data *DataBuffer) {
@@ -84,7 +86,7 @@ func (db *DataBufferBox) UnlockData(data *DataBuffer) {
 		if !data.list {
 			data.next = nil
 			data.last = nil
-			db.PushLiveList(data)
+			db.pushLiveList(data)
 		}
 		if data.changeFlag {
 			db.QuickUpdateData(data)
@@ -99,7 +101,7 @@ func (db *DataBufferBox) UpdateUnlockData(data *DataBuffer) {
 		if !data.list {
 			data.next = nil
 			data.last = nil
-			db.PushLiveList(data)
+			db.pushLiveList(data)
 		}
 		db.QuickUpdateData(data)
 	}
@@ -114,7 +116,7 @@ func (db *DataBufferBox) UpdateData(data *DataBuffer) {
 		}
 		if !data.lock {
 			data.live = uint(time.Now().UnixMilli()) + db.liveTime
-			db.PushLiveList(data)
+			db.pushLiveList(data)
 		}
 	}
 }
@@ -195,7 +197,7 @@ func (db *DataBufferBox) Loop() {
 			}
 			if !data.lock {
 				delete(db.dataBufferMap, data.dataID)
-				db.FreeBuffer(data)
+				db.freeBuffer(data)
 			}
 			data.list = false
 			data.next = nil
@@ -214,7 +216,7 @@ func (db *DataBufferBox) SetUpdateTime(time uint) {
 	db.updateTime = time
 }
 
-func (db *DataBufferBox) PushLiveList(data *DataBuffer) {
+func (db *DataBufferBox) pushLiveList(data *DataBuffer) {
 	if !data.list {
 		data.list = true
 		if db.liveListHead == nil {
@@ -243,7 +245,7 @@ func (db *DataBufferBox) PushLiveList(data *DataBuffer) {
 	}
 }
 
-func (db *DataBufferBox) RemoveFromLiveList(data *DataBuffer) {
+func (db *DataBufferBox) removeFromLiveList(data *DataBuffer) {
 	if data.changeFlag {
 		data.changeFlag = false
 		db.OnDataUpdate(data)
@@ -272,7 +274,7 @@ func (db *DataBufferBox) RemoveFromLiveList(data *DataBuffer) {
 	}
 }
 
-func (db *DataBufferBox) NewBuffer() *DataBuffer {
+func (db *DataBufferBox) newBuffer() *DataBuffer {
 	var result *DataBuffer
 	if len(db.frees) > 0 {
 		result = db.frees[len(db.frees)-1]
@@ -294,7 +296,7 @@ func (db *DataBufferBox) NewBuffer() *DataBuffer {
 	return result
 }
 
-func (db *DataBufferBox) FreeBuffer(data *DataBuffer) {
+func (db *DataBufferBox) freeBuffer(data *DataBuffer) {
 	db.frees = append(db.frees, data)
 }
 
