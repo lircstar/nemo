@@ -59,15 +59,19 @@ func createUdpAgentPool() *pool.ObjectPool {
 }
 
 func newUdpAgent(conn network.Conn) network.Agent {
-	if udpAgentPool.FreeCount() <= 1 {
-		for i := 0; i < 128; i++ {
-			udpAgentPool.Create(new(UdpAgent))
+	a := udpAgentPool.Get()
+	if a == nil {
+		if udpAgentPool.FreeCount() <= 1 {
+			for i := 0; i < 128; i++ {
+				udpAgentPool.Create(new(UdpAgent))
+			}
 		}
+		a = udpAgentPool.Get()
 	}
-	a := udpAgentPool.Get().(*UdpAgent)
-	a.conn = conn
-	a.idleTime = time.Now().Unix()
-	return a
+	agent := a.(*UdpAgent)
+	agent.conn = conn
+	agent.idleTime = time.Now().Unix()
+	return agent
 }
 
 func delUdpAgent(a network.Agent) {
