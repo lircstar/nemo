@@ -35,6 +35,9 @@ func (class *ObjectPool) Get() any {
 	defer class.Unlock()
 
 	obj := class.freeObjs.Dequeue()
+	if obj == nil {
+		return obj
+	}
 	class.usedObjs[obj] = struct{}{}
 
 	return obj

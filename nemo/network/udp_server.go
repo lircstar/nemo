@@ -109,18 +109,22 @@ func (server *UDPServer) accept() {
 }
 
 func (server *UDPServer) createConn() *UDPConn {
-	if server.connPool.FreeCount() <= 1 {
-		for i := 0; i < 128; i++ {
-			conn := newUDPConn(server.msgParser)
-			server.connPool.Create(conn)
+	conn := server.connPool.Get()
+	if conn == nil {
+		if server.connPool.FreeCount() <= 1 {
+			for i := 0; i < 128; i++ {
+				conn := newUDPConn(server.msgParser)
+				server.connPool.Create(conn)
+			}
 		}
+		conn = server.connPool.Get()
 	}
-	return server.connPool.Get().(*UDPConn)
+	return conn.(*UDPConn)
 }
 
 func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 	key := newConnTrackKey(addr)
-	tmp, ok := server.agents.Load(key)
+	tmp, ok := server.agents.Load(*key)
 	var agent Agent
 	if !ok {
 		conn := server.createConn()
@@ -132,7 +136,7 @@ func (server *UDPServer) getAgent(addr *net.UDPAddr) Agent {
 		agent = server.NewAgent(conn)
 		agent.SetType(TYPE_AGENT_UDP)
 		conn.agent = agent
-		server.agents.Store(key, agent)
+		server.agents.Store(*key, agent)
 		agent.OnConnect()
 	} else {
 		agent = tmp.(Agent)
