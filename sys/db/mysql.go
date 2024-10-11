@@ -38,7 +38,9 @@ func (p *MysqlConn) Open() error {
 // Close closes the database connection.
 func (p *MysqlConn) Close() {
 	if p.db != nil {
-		p.db.Close()
+		if err := p.db.Close(); err != nil {
+			log.Errorf("Failed to close database connection: %v", err)
+		}
 	}
 }
 
@@ -86,6 +88,7 @@ func NewMysql(DSN string) *MysqlConn {
 	pool := newPool("mysql", DSN)
 	if err := pool.Open(); err != nil {
 		log.Fatalf("Failed to initialize database, Error:%v", err)
+		return nil
 	}
 	return pool
 }

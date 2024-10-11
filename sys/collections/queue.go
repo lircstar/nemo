@@ -30,7 +30,7 @@ func (que *Queue) Dequeue() (ret any) {
 	return
 }
 
-// Loop to fetch all elements.
+// Range Loop to fetch all elements.
 func (que *Queue) Range(f func(any)) {
 	for i := range que.list {
 		f(que.list[i])

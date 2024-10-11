@@ -32,7 +32,11 @@ func Post(url string, obj any, retObj any) bool {
 		return false
 	}
 
-	json.Unmarshal(content, retObj)
+	err = json.Unmarshal(content, retObj)
+	if err != nil {
+		log.Errorf("Json return format error : %v", err.Error())
+		return false
+	}
 	return true
 }
 
@@ -71,6 +75,10 @@ func PostWithHeader(url string, headParams map[string]string, obj any, retObj an
 	}
 	body := bytes.NewBuffer(bs)
 	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		log.Errorf("Request creation failed : %v", err.Error())
+		return false
+	}
 
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
 	for key, val := range headParams {
@@ -81,24 +89,31 @@ func PostWithHeader(url string, headParams map[string]string, obj any, retObj an
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf("Post failed : %v", err.Error())
+		return false
 	}
 	defer resp.Body.Close()
 
 	content, err := io.ReadAll(resp.Body)
-	log.Info(content)
 	if err != nil {
 		log.Errorf("Read failed: %v", err.Error())
 		return false
 	}
 
-	json.Unmarshal(content, retObj)
+	err = json.Unmarshal(content, retObj)
+	if err != nil {
+		log.Errorf("Json return format error : %v", err.Error())
+		return false
+	}
 	return true
 }
 
-func PostJsonWithHeader(url string, headParams map[string]string, data string, retJson *map[string]interface{}) bool {
-
+func PostJsonWithHeader(url string, headParams map[string]string, data string, retJson *map[string]any) bool {
 	body := bytes.NewBuffer([]byte(data))
 	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		log.Errorf("Request creation failed : %v", err.Error())
+		return false
+	}
 
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
 	for key, val := range headParams {
@@ -109,16 +124,20 @@ func PostJsonWithHeader(url string, headParams map[string]string, data string, r
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf("Post failed : %v", err.Error())
+		return false
 	}
 	defer resp.Body.Close()
 
 	content, err := io.ReadAll(resp.Body)
-	log.Info(content)
 	if err != nil {
 		log.Errorf("Read failed: %v", err.Error())
 		return false
 	}
 
-	json.Unmarshal(content, retJson)
+	err = json.Unmarshal(content, retJson)
+	if err != nil {
+		log.Errorf("Json return format error : %v", err.Error())
+		return false
+	}
 	return true
 }

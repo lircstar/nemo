@@ -5,16 +5,16 @@ import (
 )
 
 const (
-	DataLiveDefault         = 1000 * 60 * 30 // 30m
-	UpdateDelayDefault      = 1000 * 60 * 5  // 5m
-	QuickUpdateDelayDefault = 1000 * 3       // 3s
+	DataLiveDefault         = 30 * time.Minute // 30m
+	UpdateDelayDefault      = 5 * time.Minute  // 5m
+	QuickUpdateDelayDefault = 3 * time.Second  // 3s
 )
 
 type DataBuffer struct {
 	useFlag    bool
 	dataID     uint
-	live       uint
-	update     uint
+	live       time.Time
+	update     time.Time
 	changeFlag bool
 	next       *DataBuffer
 	last       *DataBuffer
@@ -45,9 +45,9 @@ type DataBufferBox struct {
 	quickUpdateList []*DataBuffer
 	allocateds      []*DataBuffer
 	frees           []*DataBuffer
-	liveTime        uint
-	updateTime      uint
-	quickUpdateTime uint
+	liveTime        time.Duration
+	updateTime      time.Duration
+	quickUpdateTime time.Duration
 
 	// Callback function to create a new DataBuffer
 	CreateBufferCallBack func() *DataBuffer
@@ -82,7 +82,7 @@ func (db *DataBufferBox) LockData(data *DataBuffer) {
 func (db *DataBufferBox) UnlockData(data *DataBuffer) {
 	if data != nil {
 		data.lock = false
-		data.live = uint(time.Now().UnixMilli()) + db.liveTime
+		data.live = time.Now().Add(db.liveTime)
 		if !data.list {
 			data.next = nil
 			data.last = nil
@@ -97,7 +97,7 @@ func (db *DataBufferBox) UnlockData(data *DataBuffer) {
 func (db *DataBufferBox) UpdateUnlockData(data *DataBuffer) {
 	if data != nil {
 		data.lock = false
-		data.live = uint(time.Now().UnixMilli()) + db.liveTime
+		data.live = time.Now().Add(db.liveTime)
 		if !data.list {
 			data.next = nil
 			data.last = nil
@@ -111,11 +111,11 @@ func (db *DataBufferBox) UpdateData(data *DataBuffer) {
 	if data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
-			data.update = uint(time.Now().UnixMilli()) + db.updateTime
+			data.update = time.Now().Add(db.updateTime)
 			db.updateList = append(db.updateList, data)
 		}
 		if !data.lock {
-			data.live = uint(time.Now().UnixMilli()) + db.liveTime
+			data.live = time.Now().Add(db.liveTime)
 			db.pushLiveList(data)
 		}
 	}
@@ -125,10 +125,10 @@ func (db *DataBufferBox) QuickUpdateData(data *DataBuffer) {
 	if data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
-			data.update = uint(time.Now().UnixMilli()) + db.quickUpdateTime
+			data.update = time.Now().Add(db.quickUpdateTime)
 			db.quickUpdateList = append(db.quickUpdateList, data)
 		} else {
-			data.update = uint(time.Now().UnixMilli()) + db.quickUpdateTime
+			data.update = time.Now().Add(db.quickUpdateTime)
 			db.removeFromList(&db.updateList, data)
 			db.removeFromList(&db.quickUpdateList, data)
 			db.quickUpdateList = append(db.quickUpdateList, data)
@@ -153,8 +153,8 @@ func (db *DataBufferBox) AddData(dataID uint, data *DataBuffer) bool {
 	db.dataBufferMap[dataID] = data
 	data.useFlag = true
 	data.dataID = dataID
-	data.live = 0
-	data.update = 0
+	data.live = time.Now()
+	data.update = time.Now()
 	data.changeFlag = false
 	data.next = nil
 	data.last = nil
@@ -164,11 +164,10 @@ func (db *DataBufferBox) AddData(dataID uint, data *DataBuffer) bool {
 }
 
 func (db *DataBufferBox) Loop() {
-	now := uint(time.Now().UnixMilli())
-
+	now := time.Now()
 	for len(db.quickUpdateList) > 0 {
 		data := db.quickUpdateList[0]
-		if data.update <= now {
+		if data.update.Before(now) {
 			data.changeFlag = false
 			db.OnDataUpdate(data)
 			db.quickUpdateList = db.quickUpdateList[1:]
@@ -179,7 +178,7 @@ func (db *DataBufferBox) Loop() {
 
 	for len(db.updateList) > 0 {
 		data := db.updateList[0]
-		if data.update <= now {
+		if data.update.Before(now) {
 			data.changeFlag = false
 			db.OnDataUpdate(data)
 			db.updateList = db.updateList[1:]
@@ -189,7 +188,7 @@ func (db *DataBufferBox) Loop() {
 	}
 
 	for db.liveListHead != nil {
-		if db.liveListHead.live <= now {
+		if db.liveListHead.live.Before(now) {
 			data := db.liveListHead
 			db.liveListHead = data.next
 			if db.liveListHead != nil {
@@ -208,12 +207,12 @@ func (db *DataBufferBox) Loop() {
 	}
 }
 
-func (db *DataBufferBox) SetDataLiveTime(time uint) {
-	db.liveTime = time
+func (db *DataBufferBox) SetDataLiveTime(t uint) {
+	db.liveTime = time.Duration(t) * time.Second
 }
 
-func (db *DataBufferBox) SetUpdateTime(time uint) {
-	db.updateTime = time
+func (db *DataBufferBox) SetUpdateTime(t uint) {
+	db.updateTime = time.Duration(t) * time.Second
 }
 
 func (db *DataBufferBox) pushLiveList(data *DataBuffer) {
@@ -285,8 +284,8 @@ func (db *DataBufferBox) newBuffer() *DataBuffer {
 	}
 	if result != nil {
 		result.useFlag = false
-		result.live = 0
-		result.update = 0
+		result.live = time.Now()
+		result.update = time.Now()
 		result.changeFlag = false
 		result.next = nil
 		result.last = nil
