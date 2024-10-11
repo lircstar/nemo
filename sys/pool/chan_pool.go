@@ -1,81 +1,89 @@
 package pool
 
-import (
-	"errors"
-	"sync"
-)
+import "unsafe"
 
-// ChanPool represents a pool of reusable channels
+// ChanPool is a chan based slab allocation memory pool.
 type ChanPool struct {
-	mu    sync.Mutex
-	pool  chan chan any
-	size  int
-	width int
+	classes []chanClass
+	minSize int
+	maxSize int
 }
 
-// NewChanPool creates a new ChanPool
-func NewChanPool(size, width int) (*ChanPool, error) {
-	if size <= 0 || width <= 0 {
-		return nil, errors.New("size and width must be positive")
-	}
-
-	pool := &ChanPool{
-		pool:  make(chan chan any, size),
-		size:  size,
-		width: width,
-	}
-
-	for i := 0; i < size; i++ {
-		pool.pool <- make(chan any, width)
-	}
-
-	return pool, nil
-}
-
-// Get retrieves a channel from the pool
-func (p *ChanPool) Get() chan any {
-	select {
-	case ch := <-p.pool:
-		return ch
-	default:
-		return make(chan any, p.width)
-	}
-}
-
-// Put returns a channel to the pool
-func (p *ChanPool) Put(ch chan any) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	// Clear the channel
-	for len(ch) > 0 {
-		<-ch
-	}
-
-	select {
-	case p.pool <- ch:
-	default:
-		// Pool is full, discard the channel
-	}
-}
-
-// Len returns the number of channels currently in the pool
-func (p *ChanPool) Len() int {
-	return len(p.pool)
-}
-
-// Close closes all channels in the pool
-func (p *ChanPool) Close() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	for {
-		select {
-		case ch := <-p.pool:
-			close(ch)
-		default:
-			close(p.pool)
-			return
+// NewChanPool create a chan based slab allocation memory pool.
+// minSize is the smallest chunk size.
+// maxSize is the lagest chunk size.
+// factor is used to control growth of chunk size.
+// pageSize is the memory size of each slab class.
+func NewChanPool(minSize, maxSize, factor, pageSize int) *ChanPool {
+	pool := &ChanPool{make([]chanClass, 0, 10), minSize, maxSize}
+	for chunkSize := minSize; chunkSize <= maxSize && chunkSize <= pageSize; chunkSize *= factor {
+		c := chanClass{
+			size:   chunkSize,
+			page:   make([]byte, pageSize),
+			chunks: make(chan []byte, pageSize/chunkSize),
 		}
+		c.pageBegin = uintptr(unsafe.Pointer(&c.page[0]))
+		for i := 0; i < pageSize/chunkSize; i++ {
+			// lock down the capacity to protect append operation
+			mem := c.page[i*chunkSize : (i+1)*chunkSize : (i+1)*chunkSize]
+			c.chunks <- mem
+			if i == len(c.chunks)-1 {
+				c.pageEnd = uintptr(unsafe.Pointer(&mem[0]))
+			}
+		}
+		pool.classes = append(pool.classes, c)
+	}
+	return pool
+}
+
+// Alloc try alloc a []byte from internal slab class if no free chunk in slab class Alloc will make one.
+func (pool *ChanPool) Alloc(size int) []byte {
+	if size <= pool.maxSize {
+		for i := 0; i < len(pool.classes); i++ {
+			if pool.classes[i].size >= size {
+				mem := pool.classes[i].Pop()
+				if mem != nil {
+					return mem[:size]
+				}
+				break
+			}
+		}
+	}
+	return make([]byte, size)
+}
+
+// Free release a []byte that alloc from Pool.Alloc.
+func (pool *ChanPool) Free(mem []byte) {
+	size := cap(mem)
+	for i := 0; i < len(pool.classes); i++ {
+		if pool.classes[i].size == size {
+			pool.classes[i].Push(mem)
+			break
+		}
+	}
+}
+
+type chanClass struct {
+	size      int
+	page      []byte
+	pageBegin uintptr
+	pageEnd   uintptr
+	chunks    chan []byte
+}
+
+func (c *chanClass) Push(mem []byte) {
+	select {
+	case c.chunks <- mem:
+	default:
+		mem = nil
+	}
+}
+
+func (c *chanClass) Pop() []byte {
+	select {
+	case mem := <-c.chunks:
+		return mem
+	default:
+		return nil
 	}
 }

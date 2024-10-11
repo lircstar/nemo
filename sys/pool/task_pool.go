@@ -18,6 +18,7 @@ type Task struct {
 
 func (t *Task) run() {
 	task := <-t.activeChan
+	close(t.activeChan)
 	task.Run()
 	t.pool.pushFinishedTask(task)
 	t.pool.pendingTaskCount.Add(-1)
