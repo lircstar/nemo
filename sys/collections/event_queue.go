@@ -113,7 +113,6 @@ func (queue *eventQueue) Wait() {
 
 // NewEventQueue 创建默认长度的队列
 func NewEventQueue() EventQueue {
-
 	return &eventQueue{
 		Pipe: NewPipe(),
 	}
