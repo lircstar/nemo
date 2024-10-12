@@ -216,11 +216,11 @@ func (db *DataBufferBox) Loop() {
 }
 
 func (db *DataBufferBox) SetDataLiveTime(t uint) {
-	db.liveTime = time.Duration(t) * time.Second
+	db.liveTime = time.Duration(t) * time.Minute
 }
 
 func (db *DataBufferBox) SetUpdateTime(t uint) {
-	db.updateTime = time.Duration(t) * time.Second
+	db.updateTime = time.Duration(t) * time.Minute
 }
 
 func (db *DataBufferBox) SetQuickUpdateTime(t uint) {
