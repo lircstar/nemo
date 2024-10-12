@@ -22,15 +22,11 @@ type DataBuffer struct {
 	list       bool
 
 	// Placeholder for derived class implementation
-	data any
+	metaData any
 }
 
 func (db *DataBuffer) GetDataID() uint {
 	return db.dataID
-}
-
-func (db *DataBuffer) SetData(data any) {
-	db.data = data
 }
 
 func NewDataBuffer() *DataBuffer {
@@ -50,9 +46,9 @@ type DataBufferBox struct {
 	quickUpdateTime time.Duration
 
 	// Callback function to create a new DataBuffer
-	CreateBufferCallBack func() *DataBuffer
+	createBufferCallBack func() any
 	// Callback function to handle data
-	OnDataUpdateCallBack func(data *DataBuffer)
+	onDataUpdateCallBack func(data any)
 }
 
 func NewDataBufferBox() *DataBufferBox {
@@ -68,19 +64,21 @@ func (db *DataBufferBox) CreateData() *DataBuffer {
 	return db.newBuffer()
 }
 
-func (db *DataBufferBox) DeleteData(data *DataBuffer) {
-	db.removeFromLiveList(data)
-	db.freeBuffer(data)
+func (db *DataBufferBox) DeleteData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
+		db.removeFromLiveList(data)
+		db.freeBuffer(data)
+	}
 }
 
-func (db *DataBufferBox) LockData(data *DataBuffer) {
-	if data != nil {
+func (db *DataBufferBox) LockData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = true
 	}
 }
 
-func (db *DataBufferBox) UnlockData(data *DataBuffer) {
-	if data != nil {
+func (db *DataBufferBox) UnlockData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = false
 		data.live = time.Now().Add(db.liveTime)
 		if !data.list {
@@ -89,13 +87,13 @@ func (db *DataBufferBox) UnlockData(data *DataBuffer) {
 			db.pushLiveList(data)
 		}
 		if data.changeFlag {
-			db.QuickUpdateData(data)
+			db.QuickUpdateData(dataID)
 		}
 	}
 }
 
-func (db *DataBufferBox) UpdateUnlockData(data *DataBuffer) {
-	if data != nil {
+func (db *DataBufferBox) UpdateUnlockData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = false
 		data.live = time.Now().Add(db.liveTime)
 		if !data.list {
@@ -103,12 +101,12 @@ func (db *DataBufferBox) UpdateUnlockData(data *DataBuffer) {
 			data.last = nil
 			db.pushLiveList(data)
 		}
-		db.QuickUpdateData(data)
+		db.QuickUpdateData(dataID)
 	}
 }
 
-func (db *DataBufferBox) UpdateData(data *DataBuffer) {
-	if data != nil {
+func (db *DataBufferBox) UpdateData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
 			data.update = time.Now().Add(db.updateTime)
@@ -121,8 +119,8 @@ func (db *DataBufferBox) UpdateData(data *DataBuffer) {
 	}
 }
 
-func (db *DataBufferBox) QuickUpdateData(data *DataBuffer) {
-	if data != nil {
+func (db *DataBufferBox) QuickUpdateData(dataID uint) {
+	if data := db.GetDataBuffer(dataID); data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
 			data.update = time.Now().Add(db.quickUpdateTime)
@@ -136,19 +134,29 @@ func (db *DataBufferBox) QuickUpdateData(data *DataBuffer) {
 	}
 }
 
-func (db *DataBufferBox) GetData(dataID uint) *DataBuffer {
+func (db *DataBufferBox) GetData(dataID uint) any {
+	if data, found := db.dataBufferMap[dataID]; found {
+		return data.metaData
+	}
+	return nil
+}
+
+func (db *DataBufferBox) GetDataBuffer(dataID uint) *DataBuffer {
 	if data, found := db.dataBufferMap[dataID]; found {
 		return data
 	}
 	return nil
 }
 
-func (db *DataBufferBox) AddData(dataID uint, data *DataBuffer) bool {
+func (db *DataBufferBox) AddData(dataID uint, metaData any) bool {
+	data := db.CreateData()
+	data.metaData = metaData
+
 	if pdata, found := db.dataBufferMap[dataID]; found {
 		if pdata.lock {
 			return false
 		}
-		db.DeleteData(pdata)
+		db.DeleteData(dataID)
 	}
 	db.dataBufferMap[dataID] = data
 	data.useFlag = true
@@ -169,7 +177,7 @@ func (db *DataBufferBox) Loop() {
 		data := db.quickUpdateList[0]
 		if data.update.Before(now) {
 			data.changeFlag = false
-			db.OnDataUpdate(data)
+			db.onDataUpdateCallBack(data.metaData)
 			db.quickUpdateList = db.quickUpdateList[1:]
 		} else {
 			break
@@ -180,7 +188,7 @@ func (db *DataBufferBox) Loop() {
 		data := db.updateList[0]
 		if data.update.Before(now) {
 			data.changeFlag = false
-			db.OnDataUpdate(data)
+			db.onDataUpdateCallBack(data.metaData)
 			db.updateList = db.updateList[1:]
 		} else {
 			break
@@ -208,11 +216,23 @@ func (db *DataBufferBox) Loop() {
 }
 
 func (db *DataBufferBox) SetDataLiveTime(t uint) {
-	db.liveTime = time.Duration(t) * time.Second
+	db.liveTime = time.Duration(t) * time.Minute
 }
 
 func (db *DataBufferBox) SetUpdateTime(t uint) {
-	db.updateTime = time.Duration(t) * time.Second
+	db.updateTime = time.Duration(t) * time.Minute
+}
+
+func (db *DataBufferBox) SetQuickUpdateTime(t uint) {
+	db.quickUpdateTime = time.Duration(t) * time.Second
+}
+
+func (db *DataBufferBox) SetCreateBufferCallBack(cb func() any) {
+	db.createBufferCallBack = cb
+}
+
+func (db *DataBufferBox) SetOnDataUpdateCallBack(cb func(data any)) {
+	db.onDataUpdateCallBack = cb
 }
 
 func (db *DataBufferBox) pushLiveList(data *DataBuffer) {
@@ -247,7 +267,7 @@ func (db *DataBufferBox) pushLiveList(data *DataBuffer) {
 func (db *DataBufferBox) removeFromLiveList(data *DataBuffer) {
 	if data.changeFlag {
 		data.changeFlag = false
-		db.OnDataUpdate(data)
+		db.onDataUpdateCallBack(data.metaData)
 		db.removeFromList(&db.updateList, data)
 		db.removeFromList(&db.quickUpdateList, data)
 	}
@@ -279,7 +299,8 @@ func (db *DataBufferBox) newBuffer() *DataBuffer {
 		result = db.frees[len(db.frees)-1]
 		db.frees = db.frees[:len(db.frees)-1]
 	} else {
-		result = db.CreateBufferCallBack()
+		result = &DataBuffer{}
+		result.metaData = db.createBufferCallBack()
 		db.allocateds = append(db.allocateds, result)
 	}
 	if result != nil {
@@ -297,10 +318,6 @@ func (db *DataBufferBox) newBuffer() *DataBuffer {
 
 func (db *DataBufferBox) freeBuffer(data *DataBuffer) {
 	db.frees = append(db.frees, data)
-}
-
-func (db *DataBufferBox) OnDataUpdate(data *DataBuffer) {
-	// Placeholder for derived class implementation
 }
 
 func (db *DataBufferBox) removeFromList(list *[]*DataBuffer, data *DataBuffer) {
