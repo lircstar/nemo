@@ -12,7 +12,7 @@ const (
 
 type DataBuffer struct {
 	useFlag    bool
-	dataID     uint
+	dataID     uint64
 	live       time.Time
 	update     time.Time
 	changeFlag bool
@@ -25,7 +25,7 @@ type DataBuffer struct {
 	metaData any
 }
 
-func (db *DataBuffer) GetDataID() uint {
+func (db *DataBuffer) GetDataID() uint64 {
 	return db.dataID
 }
 
@@ -34,7 +34,7 @@ func NewDataBuffer() *DataBuffer {
 }
 
 type DataBufferBox struct {
-	dataBufferMap   map[uint]*DataBuffer
+	dataBufferMap   map[uint64]*DataBuffer
 	liveListHead    *DataBuffer
 	liveListEnd     *DataBuffer
 	updateList      []*DataBuffer
@@ -53,7 +53,7 @@ type DataBufferBox struct {
 
 func NewDataBufferBox() *DataBufferBox {
 	return &DataBufferBox{
-		dataBufferMap:   make(map[uint]*DataBuffer),
+		dataBufferMap:   make(map[uint64]*DataBuffer),
 		liveTime:        DataLiveDefault,
 		updateTime:      UpdateDelayDefault,
 		quickUpdateTime: QuickUpdateDelayDefault,
@@ -64,20 +64,20 @@ func (db *DataBufferBox) CreateData() *DataBuffer {
 	return db.newBuffer()
 }
 
-func (db *DataBufferBox) DeleteData(dataID uint) {
+func (db *DataBufferBox) DeleteData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		db.removeFromLiveList(data)
 		db.freeBuffer(data)
 	}
 }
 
-func (db *DataBufferBox) LockData(dataID uint) {
+func (db *DataBufferBox) LockData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = true
 	}
 }
 
-func (db *DataBufferBox) UnlockData(dataID uint) {
+func (db *DataBufferBox) UnlockData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = false
 		data.live = time.Now().Add(db.liveTime)
@@ -92,7 +92,7 @@ func (db *DataBufferBox) UnlockData(dataID uint) {
 	}
 }
 
-func (db *DataBufferBox) UpdateUnlockData(dataID uint) {
+func (db *DataBufferBox) UpdateUnlockData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		data.lock = false
 		data.live = time.Now().Add(db.liveTime)
@@ -105,7 +105,7 @@ func (db *DataBufferBox) UpdateUnlockData(dataID uint) {
 	}
 }
 
-func (db *DataBufferBox) UpdateData(dataID uint) {
+func (db *DataBufferBox) UpdateData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
@@ -119,7 +119,7 @@ func (db *DataBufferBox) UpdateData(dataID uint) {
 	}
 }
 
-func (db *DataBufferBox) QuickUpdateData(dataID uint) {
+func (db *DataBufferBox) QuickUpdateData(dataID uint64) {
 	if data := db.GetDataBuffer(dataID); data != nil {
 		if !data.changeFlag {
 			data.changeFlag = true
@@ -134,21 +134,21 @@ func (db *DataBufferBox) QuickUpdateData(dataID uint) {
 	}
 }
 
-func (db *DataBufferBox) GetData(dataID uint) any {
+func (db *DataBufferBox) GetData(dataID uint64) any {
 	if data, found := db.dataBufferMap[dataID]; found {
 		return data.metaData
 	}
 	return nil
 }
 
-func (db *DataBufferBox) GetDataBuffer(dataID uint) *DataBuffer {
+func (db *DataBufferBox) GetDataBuffer(dataID uint64) *DataBuffer {
 	if data, found := db.dataBufferMap[dataID]; found {
 		return data
 	}
 	return nil
 }
 
-func (db *DataBufferBox) AddData(dataID uint, metaData any) bool {
+func (db *DataBufferBox) AddData(dataID uint64, metaData any) bool {
 	data := db.CreateData()
 	data.metaData = metaData
 
@@ -215,15 +215,15 @@ func (db *DataBufferBox) Loop() {
 	}
 }
 
-func (db *DataBufferBox) SetDataLiveTime(t uint) {
+func (db *DataBufferBox) SetDataLiveTime(t uint64) {
 	db.liveTime = time.Duration(t) * time.Minute
 }
 
-func (db *DataBufferBox) SetUpdateTime(t uint) {
+func (db *DataBufferBox) SetUpdateTime(t uint64) {
 	db.updateTime = time.Duration(t) * time.Minute
 }
 
-func (db *DataBufferBox) SetQuickUpdateTime(t uint) {
+func (db *DataBufferBox) SetQuickUpdateTime(t uint64) {
 	db.quickUpdateTime = time.Duration(t) * time.Second
 }
 
