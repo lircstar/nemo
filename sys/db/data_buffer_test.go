@@ -38,7 +38,7 @@ func TestAddData(t *testing.T) {
 	})
 
 	metaData := "testMetaData"
-	dataID := uint(1)
+	dataID := uint64(1)
 
 	success := dbBox.AddData(dataID, metaData)
 	if !success {
@@ -64,7 +64,7 @@ func TestDeleteData(t *testing.T) {
 	})
 
 	metaData := "testMetaData"
-	dataID := uint(1)
+	dataID := uint64(1)
 
 	dbBox.AddData(dataID, metaData)
 	dbBox.DeleteData(dataID)
